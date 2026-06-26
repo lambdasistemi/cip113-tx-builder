@@ -18,6 +18,7 @@ module Cardano.CIP113.Scripts
     , policyIdData
     , scriptCredData
     , vkeyCredData
+    , scriptHashBytes
     ) where
 
 import Data.ByteString (ByteString)
@@ -109,6 +110,10 @@ policyIdData = B
 -- | Encode a script hash as a script credential: Constr 1 [B hash].
 scriptCredData :: ScriptHash -> Data
 scriptCredData (ScriptHash h) = Constr 1 [B (originalBytes h)]
+
+-- | Extract raw bytes from a 'ScriptHash'.
+scriptHashBytes :: ScriptHash -> ByteString
+scriptHashBytes (ScriptHash h) = originalBytes h
 
 -- | Encode raw bytes as a vkey credential: Constr 0 [B hash].
 vkeyCredData :: ByteString -> Data

@@ -51,6 +51,7 @@ import Cardano.CIP113.Scripts (
     outputRefData,
     policyIdData,
     scriptCredData,
+    scriptHashBytes,
     scriptHashOf,
     toConwayScript,
  )
@@ -105,17 +106,17 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
                     (lookupValidator "protocol_params_mint.protocol_params_mint.mint" bp)
                     (outputRefData txHashBytes 0)
                 )
-                (policyIdData (originalBytes afHash))
+                (policyIdData (scriptHashBytes afHash))
         ppmScript = toConwayScript ppmBin
         ppmHash = scriptHashOf ppmBin
         paramsPolicy = PolicyID ppmHash
-        paramsAsset = AssetName (SBS.toShort (originalBytes ppmHash))
+        paramsAsset = AssetName (SBS.toShort (scriptHashBytes ppmHash))
 
     -- programmable_logic_global: params_policy = ppmHash
     let plgBin =
             applyDataArg
                 (lookupValidator "programmable_logic_global.programmable_logic_global.withdraw" bp)
-                (policyIdData (originalBytes ppmHash))
+                (policyIdData (scriptHashBytes ppmHash))
         plgScript = toConwayScript plgBin
         plgHash = scriptHashOf plgBin
 
@@ -134,7 +135,7 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
                     (lookupValidator "issuance_cbor_hex_mint.issuance_cbor_hex_mint.mint" bp)
                     (outputRefData txHashBytes 0)
                 )
-                (policyIdData (originalBytes afHash))
+                (policyIdData (scriptHashBytes afHash))
         ichmHash = scriptHashOf ichmBin
 
     -- registry_mint: (utxo_ref #0, issuance_cbor_hex_cs, PLB script credential)
@@ -145,7 +146,7 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
                         (lookupValidator "registry_mint.registry_mint.mint" bp)
                         (outputRefData txHashBytes 0)
                     )
-                    (policyIdData (originalBytes ichmHash))
+                    (policyIdData (scriptHashBytes ichmHash))
                 )
                 (scriptCredData plbHash)
         rmScript = toConwayScript rmBin
