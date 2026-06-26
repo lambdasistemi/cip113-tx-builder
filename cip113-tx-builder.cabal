@@ -35,6 +35,7 @@ library
         Cardano.CIP113.Types
         Cardano.CIP113.Address
         Cardano.CIP113.Transfer
+        Cardano.CIP113.ThirdParty
         Cardano.CIP113.Register
 
     build-depends:
