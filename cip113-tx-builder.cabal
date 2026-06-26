@@ -1,0 +1,49 @@
+cabal-version: 3.4
+name:          cip113-tx-builder
+version:       0.1.0.0
+synopsis:      CIP-113 programmable token transaction builders
+description:
+    Monadic transaction builders for CIP-113 programmable token operations
+    (transfer, registry insertion, token minting) built on top of the
+    cardano-tx-tools DSL.
+license:       Apache-2.0
+author:        Paolo Veronelli
+maintainer:    paolo.veronelli@gmail.com
+category:      Cardano
+build-type:    Simple
+
+common opts
+    default-language: GHC2021
+    ghc-options:      -Wall -Wunused-imports -Wno-unticked-promoted-constructors
+
+    build-depends:
+        base < 5
+
+flag werror
+    description: Enable -Werror
+    manual:      True
+    default:     False
+
+common werror
+    if flag(werror)
+        ghc-options: -Werror
+
+library
+    import:          opts, werror
+    hs-source-dirs:  src
+    exposed-modules:
+        Cardano.CIP113.Types
+        Cardano.CIP113.Address
+        Cardano.CIP113.Transfer
+        Cardano.CIP113.Register
+
+    build-depends:
+        bytestring
+      , cardano-ledger-api     >= 1.13 && < 3
+      , cardano-ledger-conway  >= 1.21 && < 3
+      , cardano-ledger-core    >= 1.19 && < 3
+      , cardano-ledger-mary    >= 1.10 && < 3
+      , cardano-tx-tools
+      , containers
+      , plutus-core            >= 1.60 && < 3
+      , plutus-tx              >= 1.60 && < 3
