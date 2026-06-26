@@ -5,7 +5,6 @@ module Cardano.CIP113.E2E.ThirdPartySpec (spec) where
 
 import Test.Hspec
 
-import Cardano.CIP113.E2E.Deploy (CIP113Deployment (..))
 
 spec :: Spec
 spec =

@@ -29,11 +29,9 @@ import Cardano.Node.Client.E2E.Setup (
 import Cardano.Node.Client.N2C.Provider (mkN2CProvider)
 import Cardano.Node.Client.N2C.Submitter (mkN2CSubmitter)
 import Cardano.Node.Client.Provider (Provider (..))
-import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (..))
+import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (submitTx))
 
 import Cardano.Tx.Build (
-    Check (..),
-    Convergence (..),
     InterpretIO (..),
     TxBuild,
     attachScript,
@@ -45,7 +43,7 @@ import Cardano.Tx.Build (
  )
 
 import Cardano.CIP113.E2E.Deploy (CIP113Deployment (..), deployCIP113)
-import Cardano.CIP113.Scripts (loadBlueprint)
+import Cardano.CIP113.Scripts (loadBlueprint, scriptHashBytes)
 import Cardano.CIP113.Types (
     CIP113Credential (..),
     RegistrationMode (..),
@@ -95,24 +93,24 @@ runInsert Env{..} = do
     let updatedOrigin =
             originNode
                 { rnNext = newPolicyKey
-                , rnMintingLogicScript = ScriptCredential dAlwaysFailHash
-                , rnTransferLogicScript = ScriptCredential dAlwaysFailHash
-                , rnThirdPartyTransferLogicScript = ScriptCredential dAlwaysFailHash
+                , rnMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , rnTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , rnThirdPartyTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
                 }
         newNode =
             RegistryNode
                 { rnKey = newPolicyKey
                 , rnNext = sentinelNext
-                , rnMintingLogicScript = ScriptCredential dAlwaysFailHash
-                , rnTransferLogicScript = ScriptCredential dAlwaysFailHash
-                , rnThirdPartyTransferLogicScript = ScriptCredential dAlwaysFailHash
+                , rnMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , rnTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , rnThirdPartyTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
                 , rnGlobalStateCs = mempty
                 , rnProtectedPrefixes = []
                 }
         insertRdmr =
             RegistryInsert
                 { riKey = newPolicyKey
-                , riMintingLogicScript = ScriptCredential dAlwaysFailHash
+                , riMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
                 , riMode = RegisterOnly
                 }
 
@@ -129,32 +127,36 @@ runInsert Env{..} = do
         insertTx = do
             attachScript dRegistryMintScript
             attachScript dPlbScript
-            spendScript originIn insertRdmr
-            mint
+            _ <- spendScript originIn insertRdmr
+            _ <- mint
                 dRegistryPolicy
                 (Map.singleton (AssetName (SBS.toShort newPolicyKey)) 1)
                 insertRdmr
-            payTo' dRegistryAddr originValue updatedOrigin
-            payTo' dRegistryAddr (inject (Coin 2_000_000) :: MaryValue) newNode
+            _ <- payTo' dRegistryAddr originValue updatedOrigin
+            _ <- payTo' dRegistryAddr (inject (Coin 2_000_000) :: MaryValue) newNode
+            pure ()
 
     let interpret :: InterpretIO NoQ
         interpret = InterpretIO $ \case {}
+        eval tx =
+            Map.map (either (Left . show) Right)
+                <$> evaluateTx envProvider tx
 
     tx <-
         either (fail . show) pure
             =<< build
                 (mkPParamsBound envPParams)
                 interpret
-                NoEvaluation
+                eval
                 (genesisUtxos <> registryUtxos)
                 genesisUtxos
                 genesisAddr
                 insertTx
-    let signed = addKeyWitness tx genesisSignKey
-    result <- submit envSubmitter signed
+    let signed = addKeyWitness genesisSignKey tx
+    result <- submitTx envSubmitter signed
     case result of
-        SubmitSuccess -> pure ()
-        SubmitFail err -> fail $ "registry insert rejected: " <> show err
+        Submitted _ -> pure ()
+        Rejected reason -> fail $ "registry insert rejected: " <> show reason
 
 data NoQ a
-data NoErr
+data NoErr deriving (Show)

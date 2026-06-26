@@ -21,7 +21,7 @@ import Cardano.Ledger.Core (PParams, Script)
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Ledger.Hashes (ScriptHash, originalBytes)
 import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID (..))
-import Cardano.Ledger.TxIn (TxIn (..))
+import Cardano.Ledger.TxIn (TxIn (..), TxId (..))
 
 import Cardano.Node.Client.E2E.Setup (
     addKeyWitness,
@@ -29,7 +29,7 @@ import Cardano.Node.Client.E2E.Setup (
     genesisSignKey,
  )
 import Cardano.Node.Client.Provider (Provider (..))
-import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (..))
+import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (submitTx))
 import Cardano.Tx.Build (
     Check (..),
     Convergence (..),
@@ -90,7 +90,8 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
         [] -> fail "deployCIP113: no genesis UTxOs"
 
     let TxIn txId _idx = seedIn
-        txHashBytes = originalBytes txId
+        TxId safeHash = txId
+        txHashBytes = originalBytes safeHash
 
     -- ── Parameter application chain ───────────────────────────────────────
 
@@ -161,9 +162,10 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
     let paramsMintTx :: TxBuild NoQ NoErr ()
         paramsMintTx = do
             attachScript ppmScript
-            spend seedIn
-            mint paramsPolicy (Map.singleton paramsAsset 1) ()
-            payTo' genesisAddr (inject (Coin 2_000_000) :: MaryValue) ()
+            _ <- spend seedIn
+            _ <- mint paramsPolicy (Map.singleton paramsAsset 1) ()
+            _ <- payTo' genesisAddr (inject (Coin 2_000_000) :: MaryValue) ()
+            pure ()
 
     _tx1 <- runTx pp paramsMintTx genesisUtxos provider submitter
 
@@ -179,10 +181,11 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
     let registryInitTx :: TxBuild NoQ NoErr ()
         registryInitTx = do
             attachScript rmScript
-            spend seed2
+            _ <- spend seed2
             -- Origin node NFT: asset name = empty bytes (origin key is empty)
-            mint registryPolicy (Map.singleton (AssetName SBS.empty) 1) ()
-            payTo' registryAddr (inject (Coin 2_000_000) :: MaryValue) originNode
+            _ <- mint registryPolicy (Map.singleton (AssetName SBS.empty) 1) ()
+            _ <- payTo' registryAddr (inject (Coin 2_000_000) :: MaryValue) originNode
+            pure ()
 
     _tx2 <- runTx pp registryInitTx utxos2 provider submitter
 
@@ -205,7 +208,7 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
 -- ── Internal ──────────────────────────────────────────────────────────────────
 
 data NoQ a
-data NoErr
+data NoErr deriving (Show)
 
 runTx
     :: PParams ConwayEra
@@ -230,8 +233,8 @@ runTx pp txBuild utxos provider submitter = do
                 utxos
                 genesisAddr
                 txBuild
-    let signed = addKeyWitness tx genesisSignKey
-    result <- submit submitter signed
+    let signed = addKeyWitness genesisSignKey tx
+    result <- submitTx submitter signed
     case result of
-        SubmitSuccess -> pure signed
-        SubmitFail err -> fail $ "runTx: " <> show err
+        Submitted _ -> pure signed
+        Rejected reason -> fail $ "runTx: " <> show reason
