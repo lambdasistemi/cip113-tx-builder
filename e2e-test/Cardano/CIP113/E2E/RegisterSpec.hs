@@ -1,0 +1,160 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+
+module Cardano.CIP113.E2E.RegisterSpec (spec) where
+
+import Data.ByteString.Char8 qualified as BS8
+import Data.ByteString.Short qualified as SBS
+import Data.Map.Strict qualified as Map
+import Lens.Micro ((^.))
+import Test.Hspec
+
+import Cardano.Ledger.Api.Tx.Out (TxOut, valueTxOutL)
+import Cardano.Ledger.BaseTypes (Inject (..))
+import Cardano.Ledger.Coin (Coin (..))
+import Cardano.Ledger.Conway (ConwayEra)
+import Cardano.Ledger.Core (PParams)
+import Cardano.Ledger.Hashes (originalBytes)
+import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID (..))
+import Cardano.Ledger.TxIn (TxIn (..))
+
+import Cardano.Node.Client.E2E.Setup (
+    addKeyWitness,
+    genesisAddr,
+    genesisSignKey,
+    withDevnet,
+ )
+import Cardano.Node.Client.N2C.Provider (mkN2CProvider)
+import Cardano.Node.Client.N2C.Submitter (mkN2CSubmitter)
+import Cardano.Node.Client.Provider (Provider (..))
+import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (..))
+
+import Cardano.Tx.Build (
+    Check (..),
+    Convergence (..),
+    InterpretIO (..),
+    TxBuild,
+    attachScript,
+    build,
+    mint,
+    mkPParamsBound,
+    payTo',
+    spendScript,
+ )
+
+import Cardano.CIP113.E2E.Deploy (CIP113Deployment (..), deployCIP113)
+import Cardano.CIP113.Scripts (loadBlueprint)
+import Cardano.CIP113.Types (
+    CIP113Credential (..),
+    RegistrationMode (..),
+    RegistryNode (..),
+    RegistryRedeemer (..),
+    originNode,
+    sentinelNext,
+ )
+
+spec :: Spec
+spec =
+    around withEnv $
+        describe "CIP-113 registry insertion (E2E)" $
+            it "inserts a new policy into the registry" runInsert
+
+data Env = Env
+    { envProvider :: !(Provider IO)
+    , envSubmitter :: !(Submitter IO)
+    , envPParams :: !(PParams ConwayEra)
+    , envDeployment :: !CIP113Deployment
+    }
+
+withEnv :: (Env -> IO ()) -> IO ()
+withEnv action =
+    withDevnet $ \lsq ltxs -> do
+        let provider = mkN2CProvider lsq
+            submitter = mkN2CSubmitter ltxs
+        pp <- queryProtocolParams provider
+        utxos <- queryUTxOs provider genesisAddr
+        bp <- loadBlueprint "e2e-test/fixtures/cip113-blueprint.json"
+        deployment <- deployCIP113 bp provider submitter pp utxos
+        action
+            Env
+                { envProvider = provider
+                , envSubmitter = submitter
+                , envPParams = pp
+                , envDeployment = deployment
+                }
+
+runInsert :: Env -> IO ()
+runInsert Env{..} = do
+    let CIP113Deployment{..} = envDeployment
+
+    -- Placeholder 28-byte policy key to register.
+    let newPolicyKey = BS8.replicate 28 'p'
+
+    let updatedOrigin =
+            originNode
+                { rnNext = newPolicyKey
+                , rnMintingLogicScript = ScriptCredential dAlwaysFailHash
+                , rnTransferLogicScript = ScriptCredential dAlwaysFailHash
+                , rnThirdPartyTransferLogicScript = ScriptCredential dAlwaysFailHash
+                }
+        newNode =
+            RegistryNode
+                { rnKey = newPolicyKey
+                , rnNext = sentinelNext
+                , rnMintingLogicScript = ScriptCredential dAlwaysFailHash
+                , rnTransferLogicScript = ScriptCredential dAlwaysFailHash
+                , rnThirdPartyTransferLogicScript = ScriptCredential dAlwaysFailHash
+                , rnGlobalStateCs = mempty
+                , rnProtectedPrefixes = []
+                }
+        insertRdmr =
+            RegistryInsert
+                { riKey = newPolicyKey
+                , riMintingLogicScript = ScriptCredential dAlwaysFailHash
+                , riMode = RegisterOnly
+                }
+
+    registryUtxos <- queryUTxOs envProvider dRegistryAddr
+    (originIn, originOut) <- case registryUtxos of
+        u : _ -> pure u
+        [] -> fail "no registry UTxOs — deployCIP113 must have failed"
+
+    let originValue = originOut ^. valueTxOutL
+
+    genesisUtxos <- queryUTxOs envProvider genesisAddr
+
+    let insertTx :: TxBuild NoQ NoErr ()
+        insertTx = do
+            attachScript dRegistryMintScript
+            attachScript dPlbScript
+            spendScript originIn insertRdmr
+            mint
+                dRegistryPolicy
+                (Map.singleton (AssetName (SBS.toShort newPolicyKey)) 1)
+                insertRdmr
+            payTo' dRegistryAddr originValue updatedOrigin
+            payTo' dRegistryAddr (inject (Coin 2_000_000) :: MaryValue) newNode
+
+    let interpret :: InterpretIO NoQ
+        interpret = InterpretIO $ \case {}
+
+    tx <-
+        either (fail . show) pure
+            =<< build
+                (mkPParamsBound envPParams)
+                interpret
+                NoEvaluation
+                (genesisUtxos <> registryUtxos)
+                genesisUtxos
+                genesisAddr
+                insertTx
+    let signed = addKeyWitness tx genesisSignKey
+    result <- submit envSubmitter signed
+    case result of
+        SubmitSuccess -> pure ()
+        SubmitFail err -> fail $ "registry insert rejected: " <> show err
+
+data NoQ a
+data NoErr
