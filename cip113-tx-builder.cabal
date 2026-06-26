@@ -55,6 +55,7 @@ library
       , cardano-ledger-mary    >= 1.10 && < 3
       , cardano-tx-tools
       , containers
+      , mtl
       , plutus-core            >= 1.60 && < 3
       , plutus-tx              >= 1.60 && < 3
       , serialise

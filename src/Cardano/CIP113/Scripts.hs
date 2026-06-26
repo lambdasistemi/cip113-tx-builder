@@ -36,7 +36,7 @@ import Data.ByteString.Base16 qualified as Base16
 import Cardano.Ledger.Alonzo.Scripts (fromPlutusScript, mkPlutusScript)
 import Cardano.Ledger.Conway (ConwayEra)
 import Cardano.Ledger.Core (Script, hashScript)
-import Cardano.Ledger.Hashes (ScriptHash, originalBytes)
+import Cardano.Ledger.Hashes (ScriptHash (..), originalBytes)
 import Cardano.Ledger.Plutus.Language (Language (PlutusV3), Plutus (..), PlutusBinary (..))
 
 import Codec.Extras.SerialiseViaFlat (SerialiseViaFlat (..))
@@ -108,7 +108,7 @@ policyIdData = B
 
 -- | Encode a script hash as a script credential: Constr 1 [B hash].
 scriptCredData :: ScriptHash -> Data
-scriptCredData h = Constr 1 [B (originalBytes h)]
+scriptCredData (ScriptHash h) = Constr 1 [B (originalBytes h)]
 
 -- | Encode raw bytes as a vkey credential: Constr 0 [B hash].
 vkeyCredData :: ByteString -> Data
