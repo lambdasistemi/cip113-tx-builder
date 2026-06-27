@@ -1,0 +1,15 @@
+-- WASM build project — uses wasm32-wasi-cabal
+-- See haskell-wasm skill for full FOD pattern
+
+import: cabal.project
+
+allow-newer: *:template-haskell, *:base, *:deepseq, *:ghc-prim, *:time, *:text
+
+package crypton
+  ghc-options: -optc-D_WASI_EMULATED_MMAN -optc-DARGON2_NO_THREADS -optl-lwasi-emulated-mman
+
+package formatting
+  flags: +no-double-conversion
+
+tests: False
+benchmarks: False
