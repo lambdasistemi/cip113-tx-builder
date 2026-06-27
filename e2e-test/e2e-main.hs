@@ -1,0 +1,11 @@
+module Main (main) where
+
+import Test.Hspec (hspec)
+
+import Cardano.CIP113.E2E.RegisterSpec qualified as RegisterSpec
+import Cardano.CIP113.E2E.ThirdPartySpec qualified as ThirdPartySpec
+
+main :: IO ()
+main = hspec $ do
+    RegisterSpec.spec
+    ThirdPartySpec.spec

@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: [self-hosted, nixos]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build library
+        run: nix build .#cip113-tx-builder --no-link --print-build-logs
+
+      - name: Format check
+        run: |
+          nix develop --command bash -c "
+            fourmolu --mode check src/ e2e-test/
+          "
+
+      - name: HLint
+        run: |
+          nix develop --command bash -c "
+            hlint src/ e2e-test/
+          "

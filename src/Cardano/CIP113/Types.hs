@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
 {- |
@@ -14,24 +13,24 @@ All 'ToData' instances match the Aiken encoding exactly. 'FromData' instances
 are provided for types that callers need to read from the chain (e.g. when
 building the predecessor node update for 'registerTx').
 -}
-module Cardano.CIP113.Types
-    ( -- * PLG redeemers
-      PLGRedeemer (..)
-    , RegistryProof (..)
+module Cardano.CIP113.Types (
+    -- * PLG redeemers
+    PLGRedeemer (..),
+    RegistryProof (..),
 
-      -- * Registry node datum
-    , RegistryNode (..)
-    , CIP113Credential (..)
-    , sentinelNext
-    , originNode
+    -- * Registry node datum
+    RegistryNode (..),
+    CIP113Credential (..),
+    sentinelNext,
+    originNode,
 
-      -- * Registry mint redeemer
-    , RegistryRedeemer (..)
-    , RegistrationMode (..)
+    -- * Registry mint redeemer
+    RegistryRedeemer (..),
+    RegistrationMode (..),
 
-      -- * Issuance mint redeemer (post-F10 audit)
-    , MintingRegistryProof (..)
-    ) where
+    -- * Issuance mint redeemer (post-F10 audit)
+    MintingRegistryProof (..),
+) where
 
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
@@ -111,11 +110,13 @@ data PLGRedeemer
     | -- | Constr 1 [Int, Int]
       ThirdPartyAct
         { registryNodeIdx :: !Int
-        -- ^ Index into the transaction's reference inputs pointing at the
-        --   registry node for the token being administered.
+        {- ^ Index into the transaction's reference inputs pointing at the
+        registry node for the token being administered.
+        -}
         , outputsStartIdx :: !Int
-        -- ^ First output index in the body that belongs to this ThirdPartyAct
-        --   (the validator checks outputs from this index onward).
+        {- ^ First output index in the body that belongs to this ThirdPartyAct
+        (the validator checks outputs from this index onward).
+        -}
         }
     | -- | Constr 2 []
       UnfrackingAct
@@ -125,7 +126,8 @@ instance ToData PLGRedeemer where
     toBuiltinData (TransferAct proofs) =
         mkConstrD 0 [mkListD (map toBuiltinData proofs)]
     toBuiltinData (ThirdPartyAct ni oi) =
-        mkConstrD 1
+        mkConstrD
+            1
             [ toBuiltinData (toInteger ni)
             , toBuiltinData (toInteger oi)
             ]

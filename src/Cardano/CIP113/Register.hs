@@ -1,5 +1,4 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE RecordWildCards #-}
 
 {- |
 Module      : Cardano.CIP113.Register
@@ -42,33 +41,33 @@ The registry is sorted by 'rnKey' (lexicographic byte order). Before calling
 Violating this will cause the 'registry_spend' or 'registry_mint' script to
 reject the transaction.
 -}
-module Cardano.CIP113.Register
-    ( TokenMint (..)
-    , registerTx
-    ) where
+module Cardano.CIP113.Register (
+    TokenMint (..),
+    registerTx,
+) where
 
 import Control.Monad (forM_, void)
+import Data.ByteString.Short (toShort)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.ByteString.Short (toShort)
 
 import Cardano.Ledger.Address (Addr)
-import Cardano.Ledger.Core (Script)
 import Cardano.Ledger.Conway (ConwayEra)
+import Cardano.Ledger.Core (Script)
 import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID)
 import Cardano.Ledger.TxIn (TxIn)
 import PlutusTx.IsData.Class (ToData)
 
+import Cardano.CIP113.Types (
+    RegistryNode (..),
+    RegistryRedeemer (..),
+ )
 import Cardano.Tx.Build (
     TxBuild,
     attachScript,
     mint,
     payTo',
     spendScript,
- )
-import Cardano.CIP113.Types (
-    RegistryNode (..),
-    RegistryRedeemer (..),
  )
 
 {- | Optional initial token mint, included when 'RegistrationMode' is
@@ -77,7 +76,7 @@ import Cardano.CIP113.Types (
 data TokenMint
     = forall r.
       (ToData r) =>
-      TokenMint
+    TokenMint
     { tmPolicyId :: !PolicyID
     -- ^ Policy ID of the token being minted.
     , tmScript :: !(Script ConwayEra)
@@ -85,11 +84,12 @@ data TokenMint
     , tmAssets :: !(Map AssetName Integer)
     -- ^ Asset names and amounts to mint (positive) or burn (negative).
     , tmRedeemer :: r
-    -- ^ 'MintingRegistryProof' or substandard-defined redeemer.
-    --
-    --   For 'RegisterAndMint', use 'OutputIndexProof' pointing at the
-    --   new registry node output index (typically 1, after the updated
-    --   predecessor at index 0).
+    {- ^ 'MintingRegistryProof' or substandard-defined redeemer.
+
+    For 'RegisterAndMint', use 'OutputIndexProof' pointing at the
+    new registry node output index (typically 1, after the updated
+    predecessor at index 0).
+    -}
     }
 
 -- | Derive the registry NFT asset name from a 28-byte policy ID.
@@ -113,32 +113,36 @@ registerTx
 The 'RegistryInsert' redeemer is used for both the 'registry_spend' spend
 (predecessor node) and the 'registry_mint' minting policy.
 -}
-registerTx
-    :: Script ConwayEra
-    -- ^ 'registry_spend' script (validates linked-list invariant on spend).
-    -> Script ConwayEra
-    -- ^ 'registry_mint' script.
-    -> PolicyID
-    -- ^ Policy ID of 'registry_mint' (for minting the registry NFT).
-    -> TxIn
-    -- ^ Predecessor registry node UTxO to spend.
-    -> MaryValue
-    -- ^ Current value of the predecessor UTxO (lovelace + its registry NFT).
-    -> Addr
-    -- ^ Registry script address for node outputs.
-    -> RegistryNode
-    -- ^ Updated predecessor datum: all fields unchanged except 'rnNext'
-    --   (set to 'rnKey' of the new node).
-    -> RegistryNode
-    -- ^ New registry node datum: 'rnKey' = new policy, 'rnNext' = predecessor's
-    --   old 'rnNext'.
-    -> RegistryRedeemer
-    -- ^ Minting redeemer; also used for the predecessor spend.
-    --   Use 'RegistryInsert { riKey, riMintingLogicScript, riMode }'.
-    -> Maybe TokenMint
-    -- ^ Token mint details when 'riMode' is 'RegisterAndMint'; 'Nothing' for
-    --   'RegisterOnly'.
-    -> TxBuild q e ()
+registerTx ::
+    -- | 'registry_spend' script (validates linked-list invariant on spend).
+    Script ConwayEra ->
+    -- | 'registry_mint' script.
+    Script ConwayEra ->
+    -- | Policy ID of 'registry_mint' (for minting the registry NFT).
+    PolicyID ->
+    -- | Predecessor registry node UTxO to spend.
+    TxIn ->
+    -- | Current value of the predecessor UTxO (lovelace + its registry NFT).
+    MaryValue ->
+    -- | Registry script address for node outputs.
+    Addr ->
+    {- | Updated predecessor datum: all fields unchanged except 'rnNext'
+    (set to 'rnKey' of the new node).
+    -}
+    RegistryNode ->
+    {- | New registry node datum: 'rnKey' = new policy, 'rnNext' = predecessor's
+    old 'rnNext'.
+    -}
+    RegistryNode ->
+    {- | Minting redeemer; also used for the predecessor spend.
+    Use 'RegistryInsert { riKey, riMintingLogicScript, riMode }'.
+    -}
+    RegistryRedeemer ->
+    {- | Token mint details when 'riMode' is 'RegisterAndMint'; 'Nothing' for
+    'RegisterOnly'.
+    -}
+    Maybe TokenMint ->
+    TxBuild q e ()
 registerTx
     registrySpendScript
     registryMintScript

@@ -11,13 +11,13 @@ This deterministic derivation requires no on-chain registration step —
 tokens appear at a user's smart wallet as soon as any transaction sends
 them there.
 -}
-module Cardano.CIP113.Address
-    ( -- * Smart wallet
-      smartWalletAddr
+module Cardano.CIP113.Address (
+    -- * Smart wallet
+    smartWalletAddr,
 
-      -- * PLG accounting
-    , plgAccountAddress
-    ) where
+    -- * PLG accounting
+    plgAccountAddress,
+) where
 
 import Cardano.Ledger.Address (AccountAddress (..), AccountId (..), Addr (..))
 import Cardano.Ledger.BaseTypes (Network)
@@ -40,13 +40,13 @@ what distinguishes one user's wallet from another.
 The @userStakeCred@ may be either a key-hash or a script credential;
 both are valid staking credentials on Cardano.
 -}
-smartWalletAddr
-    :: Network
-    -> ScriptHash
-    -- ^ Hash of the deployed 'programmableLogicBase' script.
-    -> Credential Staking
-    -- ^ User's staking credential (key-hash or script).
-    -> Addr
+smartWalletAddr ::
+    Network ->
+    -- | Hash of the deployed 'programmableLogicBase' script.
+    ScriptHash ->
+    -- | User's staking credential (key-hash or script).
+    Credential Staking ->
+    Addr
 smartWalletAddr network plbHash userStakeCred =
     Addr network (ScriptHashObj plbHash) (StakeRefBase userStakeCred)
 
@@ -60,10 +60,10 @@ hash.
 Callers must include this as the 'AccountAddress' argument to
 'withdrawScript' in the transaction builder.
 -}
-plgAccountAddress
-    :: Network
-    -> ScriptHash
-    -- ^ Hash of the deployed 'programmableLogicGlobal' script.
-    -> AccountAddress
+plgAccountAddress ::
+    Network ->
+    -- | Hash of the deployed 'programmableLogicGlobal' script.
+    ScriptHash ->
+    AccountAddress
 plgAccountAddress network plgHash =
     AccountAddress network (AccountId (ScriptHashObj plgHash))
