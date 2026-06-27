@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Cardano.CIP113.E2E.ThirdPartySpec (spec) where
 
