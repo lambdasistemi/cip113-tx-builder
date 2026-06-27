@@ -61,10 +61,11 @@ data TransferInput = TransferInput
     { tiTxIn :: !TxIn
     -- ^ UTxO at the smart wallet address.
     , tiProof :: !RegistryProof
-    -- ^ Proof of registry status for the token(s) in this UTxO.
-    --
-    --   If the UTxO holds multiple programmable tokens, include one
-    --   'TransferInput' per distinct policy, all pointing to the same 'tiTxIn'.
+    {- ^ Proof of registry status for the token(s) in this UTxO.
+
+    If the UTxO holds multiple programmable tokens, include one
+    'TransferInput' per distinct policy, all pointing to the same 'tiTxIn'.
+    -}
     }
     deriving (Show, Eq)
 
@@ -79,8 +80,9 @@ data TransferLogic
       (ToData r) =>
     TransferLogic
     { tlAccount :: !AccountAddress
-    -- ^ PLG-style staking account for the transfer-logic script.
-    --   Used for the withdraw-zero invocation.
+    {- ^ PLG-style staking account for the transfer-logic script.
+    Used for the withdraw-zero invocation.
+    -}
     , tlScript :: !(Script ConwayEra)
     -- ^ The substandard's transfer-logic Plutus script.
     , tlRedeemer :: r

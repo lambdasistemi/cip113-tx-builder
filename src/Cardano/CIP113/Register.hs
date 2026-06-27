@@ -85,11 +85,12 @@ data TokenMint
     , tmAssets :: !(Map AssetName Integer)
     -- ^ Asset names and amounts to mint (positive) or burn (negative).
     , tmRedeemer :: r
-    -- ^ 'MintingRegistryProof' or substandard-defined redeemer.
-    --
-    --   For 'RegisterAndMint', use 'OutputIndexProof' pointing at the
-    --   new registry node output index (typically 1, after the updated
-    --   predecessor at index 0).
+    {- ^ 'MintingRegistryProof' or substandard-defined redeemer.
+
+    For 'RegisterAndMint', use 'OutputIndexProof' pointing at the
+    new registry node output index (typically 1, after the updated
+    predecessor at index 0).
+    -}
     }
 
 -- | Derive the registry NFT asset name from a 28-byte policy ID.
@@ -126,17 +127,21 @@ registerTx ::
     MaryValue ->
     -- | Registry script address for node outputs.
     Addr ->
-    -- | Updated predecessor datum: all fields unchanged except 'rnNext'
-    --   (set to 'rnKey' of the new node).
+    {- | Updated predecessor datum: all fields unchanged except 'rnNext'
+    (set to 'rnKey' of the new node).
+    -}
     RegistryNode ->
-    -- | New registry node datum: 'rnKey' = new policy, 'rnNext' = predecessor's
-    --   old 'rnNext'.
+    {- | New registry node datum: 'rnKey' = new policy, 'rnNext' = predecessor's
+    old 'rnNext'.
+    -}
     RegistryNode ->
-    -- | Minting redeemer; also used for the predecessor spend.
-    --   Use 'RegistryInsert { riKey, riMintingLogicScript, riMode }'.
+    {- | Minting redeemer; also used for the predecessor spend.
+    Use 'RegistryInsert { riKey, riMintingLogicScript, riMode }'.
+    -}
     RegistryRedeemer ->
-    -- | Token mint details when 'riMode' is 'RegisterAndMint'; 'Nothing' for
-    --   'RegisterOnly'.
+    {- | Token mint details when 'riMode' is 'RegisterAndMint'; 'Nothing' for
+    'RegisterOnly'.
+    -}
     Maybe TokenMint ->
     TxBuild q e ()
 registerTx

@@ -111,11 +111,13 @@ data PLGRedeemer
     | -- | Constr 1 [Int, Int]
       ThirdPartyAct
         { registryNodeIdx :: !Int
-        -- ^ Index into the transaction's reference inputs pointing at the
-        --   registry node for the token being administered.
+        {- ^ Index into the transaction's reference inputs pointing at the
+        registry node for the token being administered.
+        -}
         , outputsStartIdx :: !Int
-        -- ^ First output index in the body that belongs to this ThirdPartyAct
-        --   (the validator checks outputs from this index onward).
+        {- ^ First output index in the body that belongs to this ThirdPartyAct
+        (the validator checks outputs from this index onward).
+        -}
         }
     | -- | Constr 2 []
       UnfrackingAct
