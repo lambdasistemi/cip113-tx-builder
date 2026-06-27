@@ -30,22 +30,23 @@ tokens between smart wallets.
 * Ensure all outputs target smart-wallet addresses; plain addresses reject.
 * Provide collateral and change inputs via the outer 'build' call.
 -}
-module Cardano.CIP113.Transfer
-    ( TransferInput (..)
-    , TransferLogic (..)
-    , transferTx
-    ) where
+module Cardano.CIP113.Transfer (
+    TransferInput (..),
+    TransferLogic (..),
+    transferTx,
+) where
 
 import Control.Monad (forM_, void)
 
 import Cardano.Ledger.Address (AccountAddress, Addr)
 import Cardano.Ledger.Coin (Coin (..))
-import Cardano.Ledger.Core (Script)
 import Cardano.Ledger.Conway (ConwayEra)
+import Cardano.Ledger.Core (Script)
 import Cardano.Ledger.Mary.Value (MaryValue)
 import Cardano.Ledger.TxIn (TxIn)
 import PlutusTx.IsData.Class (ToData)
 
+import Cardano.CIP113.Types (PLGRedeemer (..), RegistryProof)
 import Cardano.Tx.Build (
     TxBuild,
     attachScript,
@@ -54,7 +55,6 @@ import Cardano.Tx.Build (
     spendScript,
     withdrawScript,
  )
-import Cardano.CIP113.Types (PLGRedeemer (..), RegistryProof)
 
 -- | One input from a smart wallet, paired with its registry membership proof.
 data TransferInput = TransferInput
@@ -77,7 +77,7 @@ not require a corresponding entry.
 data TransferLogic
     = forall r.
       (ToData r) =>
-      TransferLogic
+    TransferLogic
     { tlAccount :: !AccountAddress
     -- ^ PLG-style staking account for the transfer-logic script.
     --   Used for the withdraw-zero invocation.
@@ -109,22 +109,22 @@ transferTx
     ]
 @
 -}
-transferTx
-    :: AccountAddress
-    -- ^ PLG staking account (from 'plgAccountAddress').
-    -> Script ConwayEra
-    -- ^ PLB script (payment credential of all smart wallets).
-    -> Script ConwayEra
-    -- ^ PLG script (withdrawal script for the zero-lovelace invocation).
-    -> [TransferInput]
-    -- ^ Smart-wallet UTxOs being spent with their registry proofs.
-    -> [TxIn]
-    -- ^ Registry node reference inputs (supply one per proof).
-    -> [TransferLogic]
-    -- ^ Transfer-logic scripts for each registered token in the inputs.
-    -> [(Addr, MaryValue)]
-    -- ^ Outputs: (smart-wallet address, value). Min-UTxO is auto-compensated.
-    -> TxBuild q e ()
+transferTx ::
+    -- | PLG staking account (from 'plgAccountAddress').
+    AccountAddress ->
+    -- | PLB script (payment credential of all smart wallets).
+    Script ConwayEra ->
+    -- | PLG script (withdrawal script for the zero-lovelace invocation).
+    Script ConwayEra ->
+    -- | Smart-wallet UTxOs being spent with their registry proofs.
+    [TransferInput] ->
+    -- | Registry node reference inputs (supply one per proof).
+    [TxIn] ->
+    -- | Transfer-logic scripts for each registered token in the inputs.
+    [TransferLogic] ->
+    -- | Outputs: (smart-wallet address, value). Min-UTxO is auto-compensated.
+    [(Addr, MaryValue)] ->
+    TxBuild q e ()
 transferTx
     plgAccount
     plbScript

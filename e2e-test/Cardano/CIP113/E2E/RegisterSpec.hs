@@ -128,10 +128,11 @@ runInsert Env{..} = do
             attachScript dRegistryMintScript
             attachScript dPlbScript
             _ <- spendScript originIn insertRdmr
-            _ <- mint
-                dRegistryPolicy
-                (Map.singleton (AssetName (SBS.toShort newPolicyKey)) 1)
-                insertRdmr
+            _ <-
+                mint
+                    dRegistryPolicy
+                    (Map.singleton (AssetName (SBS.toShort newPolicyKey)) 1)
+                    insertRdmr
             _ <- payTo' dRegistryAddr originValue updatedOrigin
             _ <- payTo' dRegistryAddr (inject (Coin 2_000_000) :: MaryValue) newNode
             pure ()

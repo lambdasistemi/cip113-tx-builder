@@ -3,10 +3,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Cardano.CIP113.E2E.Deploy
-    ( CIP113Deployment (..)
-    , deployCIP113
-    ) where
+module Cardano.CIP113.E2E.Deploy (
+    CIP113Deployment (..),
+    deployCIP113,
+) where
 
 import Control.Concurrent (threadDelay)
 import Data.ByteString.Short qualified as SBS
@@ -21,7 +21,7 @@ import Cardano.Ledger.Core (PParams, Script)
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Ledger.Hashes (ScriptHash, originalBytes)
 import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID (..))
-import Cardano.Ledger.TxIn (TxIn (..), TxId (..))
+import Cardano.Ledger.TxIn (TxId (..), TxIn (..))
 
 import Cardano.Node.Client.E2E.Setup (
     addKeyWitness,
@@ -72,18 +72,19 @@ data CIP113Deployment = CIP113Deployment
     , dParamsPolicy :: !PolicyID
     }
 
--- | Deploy CIP-113 to a running devnet and return all script handles.
---
--- Submits two transactions:
---   1. Mint the protocol-params NFT (one-shot, keyed to genesis UTxO #0).
---   2. Initialise the registry origin node.
-deployCIP113
-    :: Blueprint
-    -> Provider IO
-    -> Submitter IO
-    -> PParams ConwayEra
-    -> [(TxIn, TxOut ConwayEra)]
-    -> IO CIP113Deployment
+{- | Deploy CIP-113 to a running devnet and return all script handles.
+
+Submits two transactions:
+  1. Mint the protocol-params NFT (one-shot, keyed to genesis UTxO #0).
+  2. Initialise the registry origin node.
+-}
+deployCIP113 ::
+    Blueprint ->
+    Provider IO ->
+    Submitter IO ->
+    PParams ConwayEra ->
+    [(TxIn, TxOut ConwayEra)] ->
+    IO CIP113Deployment
 deployCIP113 bp provider submitter pp genesisUtxos = do
     (seedIn, _) <- case genesisUtxos of
         u : _ -> pure u
@@ -210,13 +211,13 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
 data NoQ a
 data NoErr deriving (Show)
 
-runTx
-    :: PParams ConwayEra
-    -> TxBuild NoQ NoErr ()
-    -> [(TxIn, TxOut ConwayEra)]
-    -> Provider IO
-    -> Submitter IO
-    -> IO ConwayTx
+runTx ::
+    PParams ConwayEra ->
+    TxBuild NoQ NoErr () ->
+    [(TxIn, TxOut ConwayEra)] ->
+    Provider IO ->
+    Submitter IO ->
+    IO ConwayTx
 runTx pp txBuild utxos provider submitter = do
     let interpret :: InterpretIO NoQ
         interpret = InterpretIO $ \case {}

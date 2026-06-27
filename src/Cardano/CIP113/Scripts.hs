@@ -2,24 +2,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Cardano.CIP113.Scripts
-    ( -- * Blueprint
-      Blueprint
-    , loadBlueprint
-    , lookupValidator
+module Cardano.CIP113.Scripts (
+    -- * Blueprint
+    Blueprint,
+    loadBlueprint,
+    lookupValidator,
 
-      -- * Parameter application
-    , applyDataArg
-    , toConwayScript
-    , scriptHashOf
+    -- * Parameter application
+    applyDataArg,
+    toConwayScript,
+    scriptHashOf,
 
-      -- * Data encodings for CIP-113 parameters
-    , outputRefData
-    , policyIdData
-    , scriptCredData
-    , vkeyCredData
-    , scriptHashBytes
-    ) where
+    -- * Data encodings for CIP-113 parameters
+    outputRefData,
+    policyIdData,
+    scriptCredData,
+    vkeyCredData,
+    scriptHashBytes,
+) where
 
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
@@ -86,7 +86,7 @@ applyDataArg sbs d =
         argTerm = Constant () (Some (ValueOf DefaultUniData d))
         argProg = Program ann ver argTerm
         applied = either (error . show) id $ runExcept $ applyProgram prog argProg
-    in ser applied
+     in ser applied
 
 -- | Wrap a serialised Plutus V3 binary as a 'Script' 'ConwayEra'.
 toConwayScript :: SBS.ShortByteString -> Script ConwayEra
@@ -97,8 +97,9 @@ toConwayScript sbs =
 scriptHashOf :: SBS.ShortByteString -> ScriptHash
 scriptHashOf = hashScript . toConwayScript
 
--- | Encode a UTxO reference as Plutus Data.
--- Aiken OutputReference = Constr 0 [Constr 0 [B txHash], I outputIndex]
+{- | Encode a UTxO reference as Plutus Data.
+Aiken OutputReference = Constr 0 [Constr 0 [B txHash], I outputIndex]
+-}
 outputRefData :: ByteString -> Int -> Data
 outputRefData txHash idx =
     Constr 0 [Constr 0 [B txHash], I (fromIntegral idx)]

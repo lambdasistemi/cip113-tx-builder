@@ -5,7 +5,6 @@ module Cardano.CIP113.E2E.ThirdPartySpec (spec) where
 
 import Test.Hspec
 
-
 spec :: Spec
 spec =
     describe "CIP-113 freeze/seize (E2E)" $ do
