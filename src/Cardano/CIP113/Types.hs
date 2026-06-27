@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 {- |
 Module      : Cardano.CIP113.Types
 Description : Plutus Data types for CIP-113 programmable tokens
