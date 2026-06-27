@@ -63,6 +63,7 @@ data CIP113Deployment = CIP113Deployment
     , dPlbHash :: !ScriptHash
     , dPlgScript :: !(Script ConwayEra)
     , dPlgHash :: !ScriptHash
+    , dRegistrySpendScript :: !(Script ConwayEra)
     , dRegistryMintScript :: !(Script ConwayEra)
     , dRegistryPolicy :: !PolicyID
     , dRegistryAddr :: !Addr
@@ -154,8 +155,16 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
         rmHash = scriptHashOf rmBin
         registryPolicy = PolicyID rmHash
 
-    -- Registry nodes: payment = PLB, no stake
-    let registryAddr = Addr Testnet (ScriptHashObj plbHash) StakeRefNull
+    -- registry_spend: (protocol_params_cs = ppmHash)
+    let rsBin =
+            applyDataArg
+                (lookupValidator "registry_spend.registry_spend.spend" bp)
+                (policyIdData (scriptHashBytes ppmHash))
+        rsScript = toConwayScript rsBin
+        rsHash = scriptHashOf rsBin
+
+    -- Registry nodes sit at the registry_spend address (no stake)
+    let registryAddr = Addr Testnet (ScriptHashObj rsHash) StakeRefNull
 
     -- ── Tx 1: Mint protocol params NFT ───────────────────────────────────
 
@@ -197,6 +206,7 @@ deployCIP113 bp provider submitter pp genesisUtxos = do
             , dPlbHash = plbHash
             , dPlgScript = plgScript
             , dPlgHash = plgHash
+            , dRegistrySpendScript = rsScript
             , dRegistryMintScript = rmScript
             , dRegistryPolicy = registryPolicy
             , dRegistryAddr = registryAddr

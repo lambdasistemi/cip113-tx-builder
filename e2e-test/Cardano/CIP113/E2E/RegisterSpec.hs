@@ -125,8 +125,8 @@ runInsert Env{..} = do
 
     let insertTx :: TxBuild NoQ NoErr ()
         insertTx = do
+            attachScript dRegistrySpendScript
             attachScript dRegistryMintScript
-            attachScript dPlbScript
             _ <- spendScript originIn insertRdmr
             _ <-
                 mint
