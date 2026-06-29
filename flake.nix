@@ -35,9 +35,10 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     ghc-wasm-meta.url =
       "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
+    dev-assets-mkdocs.url = "github:paolino/dev-assets?dir=mkdocs";
   };
 
-  outputs = inputs@{ nixpkgs, flake-parts, haskellNix, iohkNix, CHaP, ... }:
+  outputs = inputs@{ nixpkgs, flake-parts, haskellNix, iohkNix, CHaP, dev-assets-mkdocs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
       perSystem = { system, ... }:
@@ -125,6 +126,10 @@
             cip113-wasm = cip113Wasm;
           };
           devShells.default = project.shell;
+          devShells.docs = pkgs.mkShell {
+            inputsFrom = [ dev-assets-mkdocs.devShells.${system}.default ];
+            packages = [ pkgs.just ];
+          };
         };
     };
 }
