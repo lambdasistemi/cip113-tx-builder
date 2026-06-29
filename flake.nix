@@ -31,6 +31,7 @@
         "github:intersectmbo/cardano-haskell-packages/887d73ce434831e3a67df48e070f4f979b3ac5a6";
       flake = false;
     };
+    cardano-node.url = "github:IntersectMBO/cardano-node/10.7.0";
     flake-parts.url = "github:hercules-ci/flake-parts";
     ghc-wasm-meta.url =
       "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
@@ -119,6 +120,8 @@
               project.hsPkgs.cip113-tx-builder.components.library;
             e2e-tests =
               project.hsPkgs.cip113-tx-builder.components.tests.e2e-tests;
+            cardano-node =
+              inputs.cardano-node.packages.${system}.cardano-node;
             cip113-wasm = cip113Wasm;
           };
           devShells.default = project.shell;

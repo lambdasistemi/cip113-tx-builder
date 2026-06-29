@@ -25,3 +25,13 @@ jobs:
           nix develop --command bash -c "
             hlint src/ e2e-test/
           "
+
+      - name: E2E integration tests
+        run: |
+          set -euo pipefail
+          e2e_tests="$(nix build .#e2e-tests --no-link --print-out-paths --print-build-logs)"
+          cardano_node="$(nix build .#cardano-node --no-link --print-out-paths --print-build-logs)"
+          tmpdir="$(mktemp -d)"
+          trap 'rm -rf "$tmpdir"' EXIT
+          cd e2e-test
+          TMPDIR="$tmpdir" PATH="$cardano_node/bin:$PATH" "$e2e_tests/bin/e2e-tests"
