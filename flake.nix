@@ -92,7 +92,11 @@
               "https://chap.intersectmbo.org/" = CHaP;
             };
           };
-          project = mkProject [ ];
+          project = mkProject [
+            {
+              packages.cip113-tx-builder.flags.build-e2e-tests = true;
+            }
+          ];
           cip113Wasm =
             let
               wasmTools = inputs.ghc-wasm-meta.packages.${system};
@@ -113,6 +117,8 @@
           packages = {
             cip113-tx-builder =
               project.hsPkgs.cip113-tx-builder.components.library;
+            e2e-tests =
+              project.hsPkgs.cip113-tx-builder.components.tests.e2e-tests;
             cip113-wasm = cip113Wasm;
           };
           devShells.default = project.shell;

@@ -98,11 +98,11 @@ scriptHashOf :: SBS.ShortByteString -> ScriptHash
 scriptHashOf = hashScript . toConwayScript
 
 {- | Encode a UTxO reference as Plutus Data.
-Aiken OutputReference = Constr 0 [Constr 0 [B txHash], I outputIndex]
+Aiken OutputReference = Constr 0 [B txHash, I outputIndex]
 -}
 outputRefData :: ByteString -> Int -> Data
 outputRefData txHash idx =
-    Constr 0 [Constr 0 [B txHash], I (fromIntegral idx)]
+    Constr 0 [B txHash, I (fromIntegral idx)]
 
 -- | Encode a 28-byte policy/script hash as a bare bytes Plutus Data.
 policyIdData :: ByteString -> Data

@@ -29,6 +29,7 @@ module Cardano.CIP113.Types (
     RegistrationMode (..),
 
     -- * Issuance mint redeemer (post-F10 audit)
+    IssuanceCborHex (..),
     MintingRegistryProof (..),
 ) where
 
@@ -298,6 +299,26 @@ instance ToData RegistryRedeemer where
 -- ----------------------------------------------------
 -- Issuance mint redeemer
 -- ----------------------------------------------------
+
+{- | Datum locked with the issuance-CBOR reference NFT.
+
+The on-chain registry mint policy reconstructs an issuance minting policy by
+concatenating the Plutus V3 version byte, this prefix, the 28-byte hash inside
+the registered minting logic credential, and this postfix.
+-}
+data IssuanceCborHex = IssuanceCborHex
+    { ichPrefixCborHex :: !ByteString
+    , ichPostfixCborHex :: !ByteString
+    }
+    deriving (Show, Eq)
+
+instance ToData IssuanceCborHex where
+    toBuiltinData IssuanceCborHex{..} =
+        mkConstrD
+            0
+            [ mkBsD ichPrefixCborHex
+            , mkBsD ichPostfixCborHex
+            ]
 
 {- | Redeemer for the 'issuanceMintingPolicy' script.
 
