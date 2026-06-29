@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [setup, main, 'feat/**']
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,6 +26,17 @@ jobs:
           nix develop --command bash -c "
             hlint src/ e2e-test/
           "
+
+      - name: Cabal version matches manifest
+        run: |
+          manifest=$(jq -r '."."' .release-please-manifest.json)
+          pvp="${manifest}.0"
+          cabal=$(grep '^version:' cip113-tx-builder.cabal | awk '{print $2}')
+          if [ "$cabal" != "$pvp" ]; then
+            echo "Version drift: cabal=$cabal manifest-derived=$pvp"
+            exit 1
+          fi
+          echo "Version OK: $cabal"
 
       - name: E2E integration tests
         run: |

@@ -1,0 +1,34 @@
+name: Sync cabal version
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  sync:
+    if: startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync version from manifest to cabal
+        run: |
+          semver=$(jq -r '."."' .release-please-manifest.json)
+          pvp="${semver}.0"
+          sed -i "s/^version:.*$/version:       ${pvp}/" cip113-tx-builder.cabal
+          echo "Set version: ${pvp}"
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No change"
+          else
+            git add cip113-tx-builder.cabal
+            git commit -m "chore: sync cabal version to $(jq -r '."."' .release-please-manifest.json)"
+            git push
+          fi
