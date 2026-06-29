@@ -36,12 +36,12 @@ import Cardano.Node.Client.Provider (Provider (..))
 import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (submitTx))
 
 import Cardano.Tx.Build (
+    CertWitness (..),
     InterpretIO (..),
     TxBuild,
     attachScript,
     build,
     collateral,
-    CertWitness (..),
     mint,
     mkPParamsBound,
     payTo,
