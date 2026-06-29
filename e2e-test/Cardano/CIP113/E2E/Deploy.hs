@@ -49,13 +49,13 @@ import Cardano.Node.Client.Submitter (SubmitResult (..), Submitter (submitTx))
 import Cardano.Tx.Balance (CollateralUtxos (..))
 import Cardano.Tx.Build (
     BuildOptions (..),
+    CertWitness (..),
     InterpretIO (..),
     TxBuild,
     attachScript,
     buildWith,
-    collateral,
     certify,
-    CertWitness (..),
+    collateral,
     defaultBuildOptions,
     mint,
     mkPParamsBound,
@@ -77,9 +77,9 @@ import Cardano.CIP113.Scripts (
     toConwayScript,
  )
 import Cardano.CIP113.Types (CIP113Credential (..), IssuanceCborHex (..), RegistryRedeemer (..), originNode)
+import PlutusCore.Data (Data (..))
 import PlutusTx.Builtins.Internal (BuiltinData (..))
 import PlutusTx.IsData.Class (ToData (..))
-import PlutusCore.Data (Data (..))
 
 withCIP113Devnet :: (LSQChannel -> LTxSChannel -> IO a) -> IO a
 withCIP113Devnet action =
