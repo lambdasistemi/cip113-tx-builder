@@ -109,4 +109,4 @@ package ouroboros-network
   benchmarks: False
 
 package cip113-tx-builder
-  flags: +werror
+  flags: +werror +build-e2e-tests

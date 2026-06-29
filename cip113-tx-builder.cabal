@@ -78,7 +78,8 @@ test-suite e2e-tests
         Cardano.CIP113.E2E.ThirdPartySpec
 
     build-depends:
-        bytestring
+        async
+      , bytestring
       , cardano-ledger-api       >= 1.13 && < 3
       , cardano-ledger-conway    >= 1.21 && < 3
       , cardano-ledger-core      >= 1.19 && < 3
@@ -91,4 +92,5 @@ test-suite e2e-tests
       , hspec                    >= 2.11 && < 2.12
       , microlens                >= 0.4  && < 0.5
       , plutus-core              >= 1.60 && < 3
+      , plutus-tx                >= 1.60 && < 3
       , text

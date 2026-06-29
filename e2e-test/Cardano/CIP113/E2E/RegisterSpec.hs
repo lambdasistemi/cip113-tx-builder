@@ -5,26 +5,24 @@
 
 module Cardano.CIP113.E2E.RegisterSpec (spec) where
 
-import Data.ByteString.Char8 qualified as BS8
+import Data.ByteString qualified as BS
 import Data.ByteString.Short qualified as SBS
 import Data.Map.Strict qualified as Map
 import Lens.Micro ((^.))
 import Test.Hspec
 
-import Cardano.Ledger.Api.Tx.Out (TxOut, valueTxOutL)
-import Cardano.Ledger.BaseTypes (Inject (..))
+import Cardano.Ledger.Api.Tx.Out (TxOut, coinTxOutL, valueTxOutL)
+import Cardano.Ledger.BaseTypes (Network (..))
 import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Conway (ConwayEra)
 import Cardano.Ledger.Core (PParams)
-import Cardano.Ledger.Hashes (originalBytes)
-import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID (..))
-import Cardano.Ledger.TxIn (TxIn (..))
+import Cardano.Ledger.Mary.Value (AssetName (..), PolicyID (..))
+import Cardano.Ledger.TxIn (TxIn)
 
 import Cardano.Node.Client.E2E.Setup (
     addKeyWitness,
     genesisAddr,
     genesisSignKey,
-    withDevnet,
  )
 import Cardano.Node.Client.N2C.Provider (mkN2CProvider)
 import Cardano.Node.Client.N2C.Submitter (mkN2CSubmitter)
@@ -36,16 +34,21 @@ import Cardano.Tx.Build (
     TxBuild,
     attachScript,
     build,
+    collateral,
     mint,
     mkPParamsBound,
     payTo',
+    reference,
     spendScript,
+    withdrawScript,
  )
 
-import Cardano.CIP113.E2E.Deploy (CIP113Deployment (..), deployCIP113)
+import Cardano.CIP113.Address (plgAccountAddress)
+import Cardano.CIP113.E2E.Deploy (CIP113Deployment (..), deployCIP113, nftValue, withCIP113Devnet)
 import Cardano.CIP113.Scripts (loadBlueprint, scriptHashBytes)
 import Cardano.CIP113.Types (
     CIP113Credential (..),
+    PLGRedeemer (..),
     RegistrationMode (..),
     RegistryNode (..),
     RegistryRedeemer (..),
@@ -64,53 +67,58 @@ data Env = Env
     , envSubmitter :: !(Submitter IO)
     , envPParams :: !(PParams ConwayEra)
     , envDeployment :: !CIP113Deployment
+    , envMintingCred :: !CIP113Credential
+    , envPolicyKey :: !BS.ByteString
     }
 
 withEnv :: (Env -> IO ()) -> IO ()
 withEnv action =
-    withDevnet $ \lsq ltxs -> do
+    withCIP113Devnet $ \lsq ltxs -> do
         let provider = mkN2CProvider lsq
             submitter = mkN2CSubmitter ltxs
         pp <- queryProtocolParams provider
         utxos <- queryUTxOs provider genesisAddr
-        bp <- loadBlueprint "e2e-test/fixtures/cip113-blueprint.json"
+        bp <- loadBlueprint "fixtures/cip113-blueprint.json"
         deployment <- deployCIP113 bp provider submitter pp utxos
+        let CIP113Deployment{..} = deployment
+            mintingCred = ScriptCredential (scriptHashBytes dPlgHash)
+            policyKey = case dIssuancePolicy of
+                PolicyID h -> scriptHashBytes h
         action
             Env
                 { envProvider = provider
                 , envSubmitter = submitter
                 , envPParams = pp
                 , envDeployment = deployment
+                , envMintingCred = mintingCred
+                , envPolicyKey = policyKey
                 }
 
 runInsert :: Env -> IO ()
 runInsert Env{..} = do
     let CIP113Deployment{..} = envDeployment
 
-    -- Placeholder 28-byte policy key to register.
-    let newPolicyKey = BS8.replicate 28 'p'
+    let newPolicyKey = envPolicyKey
+        mintingCred = envMintingCred
 
     let updatedOrigin =
             originNode
                 { rnNext = newPolicyKey
-                , rnMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
-                , rnTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
-                , rnThirdPartyTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
                 }
         newNode =
             RegistryNode
                 { rnKey = newPolicyKey
                 , rnNext = sentinelNext
-                , rnMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
-                , rnTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
-                , rnThirdPartyTransferLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , rnMintingLogicScript = mintingCred
+                , rnTransferLogicScript = mintingCred
+                , rnThirdPartyTransferLogicScript = mintingCred
                 , rnGlobalStateCs = mempty
                 , rnProtectedPrefixes = []
                 }
         insertRdmr =
             RegistryInsert
                 { riKey = newPolicyKey
-                , riMintingLogicScript = ScriptCredential (scriptHashBytes dAlwaysFailHash)
+                , riMintingLogicScript = mintingCred
                 , riMode = RegisterOnly
                 }
 
@@ -122,19 +130,34 @@ runInsert Env{..} = do
     let originValue = originOut ^. valueTxOutL
 
     genesisUtxos <- queryUTxOs envProvider genesisAddr
+    lockedUtxos <- queryUTxOs envProvider dAlwaysFailAddr
+    collateralIn <- case genesisUtxos of
+        (txIn, _) : _ -> pure txIn
+        [] -> fail "no genesis UTxOs for collateral"
 
     let insertTx :: TxBuild NoQ NoErr ()
         insertTx = do
             attachScript dRegistrySpendScript
             attachScript dRegistryMintScript
+            attachScript dPlgScript
+            collateral collateralIn
+            mapM_ (reference . fst) lockedUtxos
             _ <- spendScript originIn insertRdmr
+            withdrawScript
+                (plgAccountAddress Testnet dPlgHash)
+                (Coin 0)
+                (TransferAct [])
             _ <-
                 mint
                     dRegistryPolicy
                     (Map.singleton (AssetName (SBS.toShort newPolicyKey)) 1)
                     insertRdmr
             _ <- payTo' dRegistryAddr originValue updatedOrigin
-            _ <- payTo' dRegistryAddr (inject (Coin 2_000_000) :: MaryValue) newNode
+            _ <-
+                payTo'
+                    dRegistryAddr
+                    (nftValue dRegistryPolicy (AssetName (SBS.toShort newPolicyKey)) 2_000_000)
+                    newNode
             pure ()
 
     let interpret :: InterpretIO NoQ
@@ -149,8 +172,8 @@ runInsert Env{..} = do
                 (mkPParamsBound envPParams)
                 interpret
                 eval
-                (genesisUtxos <> registryUtxos)
-                genesisUtxos
+                (largeFeeUtxos genesisUtxos <> registryUtxos)
+                lockedUtxos
                 genesisAddr
                 insertTx
     let signed = addKeyWitness genesisSignKey tx
@@ -161,3 +184,9 @@ runInsert Env{..} = do
 
 data NoQ a
 data NoErr deriving (Show)
+
+largeFeeUtxos :: [(TxIn, TxOut ConwayEra)] -> [(TxIn, TxOut ConwayEra)]
+largeFeeUtxos utxos =
+    case filter ((>= Coin 10_000_000) . (^. coinTxOutL) . snd) utxos of
+        [] -> utxos
+        large -> large
