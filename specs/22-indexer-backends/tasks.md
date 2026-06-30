@@ -14,12 +14,12 @@
 
 ## Slice 2 - CLI Provider Selection
 
-- [ ] T022-S2 Parse `--blockfrost-project-id` and `--kupo-url` through the
+- [X] T022-S2 Parse `--blockfrost-project-id` and `--kupo-url` through the
   existing global and command-local provider option parser.
-- [ ] T022-S2 Select providers with parent-brief precedence: node >
+- [X] T022-S2 Select providers with parent-brief precedence: node >
   Blockfrost > Kupo > offline.
-- [ ] T022-S2 Preserve existing offline/node behavior, missing-node validation,
+- [X] T022-S2 Preserve existing offline/node behavior, missing-node validation,
   command-local override behavior, and `--json` threading.
-- [ ] T022-S2 Verify clear exit-code-1 behavior for unreachable/misconfigured
+- [X] T022-S2 Verify clear exit-code-1 behavior for unreachable/misconfigured
   indexer providers without requiring a live Blockfrost or Kupo service in CI.
-- [ ] T022-S2 Run `./gate.sh` and record the result.
+- [X] T022-S2 Run `./gate.sh` and record the result.

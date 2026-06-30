@@ -1,6 +1,10 @@
+{-# LANGUAGE RankNTypes #-}
+
 module Main (main) where
 
 import Control.Applicative (optional, (<|>))
+import Data.Text (Text)
+import Data.Text qualified as Text
 import Data.Word (Word32)
 import Options.Applicative (
     Parser,
@@ -30,8 +34,16 @@ import Cardano.CIP113.CLI.Command.Freeze qualified as Freeze
 import Cardano.CIP113.CLI.Command.Register qualified as Register
 import Cardano.CIP113.CLI.Command.Seize qualified as Seize
 import Cardano.CIP113.CLI.Command.Transfer qualified as Transfer
+import Cardano.CIP113.CLI.Provider (UTxOProvider)
+import Cardano.CIP113.CLI.Provider.Blockfrost (
+    BlockfrostProviderConfig (..),
+    withBlockfrostProvider,
+ )
+import Cardano.CIP113.CLI.Provider.Kupo (
+    KupoProviderConfig (..),
+    withKupoProvider,
+ )
 import Cardano.CIP113.CLI.Provider.Node (
-    NodeProvider,
     NodeProviderConfig (..),
     withNodeProvider,
  )
@@ -56,6 +68,8 @@ data Command
 data ProviderOptions = ProviderOptions
     { providerSocketPath :: !(Maybe FilePath)
     , providerNetworkMagic :: !(Maybe Word32)
+    , providerBlockfrostProjectId :: !(Maybe Text)
+    , providerKupoUrl :: !(Maybe Text)
     }
 
 main :: IO ()
@@ -123,6 +137,20 @@ providerOptionsParser =
                     <> help "Cardano network magic"
                 )
             )
+        <*> optional
+            ( Text.pack
+                <$> strOption
+                    ( long "blockfrost-project-id"
+                        <> help "Blockfrost project id"
+                    )
+            )
+        <*> optional
+            ( Text.pack
+                <$> strOption
+                    ( long "kupo-url"
+                        <> help "Kupo base URL"
+                    )
+            )
 
 runCli :: CliOptions -> IO ()
 runCli options =
@@ -160,7 +188,7 @@ runWithSelectedProvider ::
     CliOptions ->
     ProviderOptions ->
     (Bool -> commandOptions -> IO ()) ->
-    (NodeProvider -> Bool -> commandOptions -> IO ()) ->
+    (forall provider. (UTxOProvider provider) => provider -> Bool -> commandOptions -> IO ()) ->
     commandOptions ->
     IO ()
 runWithSelectedProvider
@@ -169,26 +197,48 @@ runWithSelectedProvider
     runOffline
     runNode
     commandOptions =
-        case selectNodeProviderConfig cliOptions commandProviderOptions of
-            NoNodeProvider ->
+        case selectProviderConfig cliOptions commandProviderOptions of
+            UseOfflineProvider ->
                 runOffline (cliJson cliOptions) commandOptions
             UseNodeProvider nodeConfig ->
                 withNodeProvider nodeConfig $ \provider ->
+                    runNode provider (cliJson cliOptions) commandOptions
+            UseBlockfrostProvider blockfrostConfig ->
+                withBlockfrostProvider blockfrostConfig $ \provider ->
+                    runNode provider (cliJson cliOptions) commandOptions
+            UseKupoProvider kupoConfig ->
+                withKupoProvider kupoConfig $ \provider ->
                     runNode provider (cliJson cliOptions) commandOptions
             InvalidNodeProvider ->
                 dieUser
                     "node provider requires both --socket-path and --network-magic"
 
 data SelectedProvider
-    = NoNodeProvider
+    = UseOfflineProvider
     | UseNodeProvider !NodeProviderConfig
+    | UseBlockfrostProvider !BlockfrostProviderConfig
+    | UseKupoProvider !KupoProviderConfig
     | InvalidNodeProvider
 
-selectNodeProviderConfig :: CliOptions -> ProviderOptions -> SelectedProvider
-selectNodeProviderConfig cliOptions commandProviderOptions =
+selectProviderConfig :: CliOptions -> ProviderOptions -> SelectedProvider
+selectProviderConfig cliOptions commandProviderOptions =
     case (socketPath, networkMagic) of
         (Nothing, Nothing) ->
-            NoNodeProvider
+            case blockfrostProjectId of
+                Just projectId ->
+                    UseBlockfrostProvider
+                        BlockfrostProviderConfig
+                            { blockfrostProjectId = projectId
+                            }
+                Nothing ->
+                    case kupoUrl of
+                        Just url ->
+                            UseKupoProvider
+                                KupoProviderConfig
+                                    { kupoBaseUrl = url
+                                    }
+                        Nothing ->
+                            UseOfflineProvider
         (Just path, Just magic) ->
             UseNodeProvider
                 NodeProviderConfig
@@ -205,6 +255,12 @@ selectNodeProviderConfig cliOptions commandProviderOptions =
     networkMagic =
         providerNetworkMagic commandProviderOptions
             <|> providerNetworkMagic globalProviderOptions
+    blockfrostProjectId =
+        providerBlockfrostProjectId commandProviderOptions
+            <|> providerBlockfrostProjectId globalProviderOptions
+    kupoUrl =
+        providerKupoUrl commandProviderOptions
+            <|> providerKupoUrl globalProviderOptions
 
 dieUser :: String -> IO a
 dieUser message = do
