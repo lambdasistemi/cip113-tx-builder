@@ -12,12 +12,12 @@
 
 ## Slice 2 - CLI Provider Selection
 
-- [ ] T021-S2 Resolve Q-001 before editing command modules.
-- [ ] T021-S2 Parse global `--socket-path` and `--network-magic` flags and
+- [x] T021-S2 Resolve Q-001 before editing command modules.
+- [x] T021-S2 Parse global `--socket-path` and `--network-magic` flags and
   select node mode only when both are present.
-- [ ] T021-S2 Preserve offline fallback when node flags are absent and keep
+- [x] T021-S2 Preserve offline fallback when node flags are absent and keep
   `--json` behavior unchanged.
-- [ ] T021-S2 Return exit code 1 with a clear error when exactly one node flag
+- [x] T021-S2 Return exit code 1 with a clear error when exactly one node flag
   is present or the node socket path is missing.
 
 ## Slice 3 - Gate And Smoke

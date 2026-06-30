@@ -4,8 +4,10 @@ module Cardano.CIP113.CLI.Command.Register (
     Options (..),
     parser,
     run,
+    runWithProvider,
 ) where
 
+import Control.Applicative (optional)
 import Control.Exception (IOException, displayException, try)
 import Data.Bits (shiftL, shiftR, (.&.), (.|.))
 import Data.Char (isHexDigit, ord)
@@ -38,7 +40,7 @@ import Cardano.CIP113.CLI.Provider.Offline (
  )
 
 data Options = Options
-    { optionsUtxoFile :: !FilePath
+    { optionsUtxoFile :: !(Maybe FilePath)
     , optionsRegistryUtxo :: !UTxORef
     , optionsTokenName :: !Text
     , optionsPolicyId :: !Text
@@ -48,10 +50,12 @@ data Options = Options
 parser :: Parser Options
 parser =
     Options
-        <$> strOption
-            ( long "utxo-file"
-                <> metavar "FILE"
-                <> help "Offline cardano-cli UTxO JSON file"
+        <$> optional
+            ( strOption
+                ( long "utxo-file"
+                    <> metavar "FILE"
+                    <> help "Offline cardano-cli UTxO JSON file"
+                )
             )
         <*> option
             (eitherReader parseUTxORefArgument)
@@ -74,7 +78,16 @@ parser =
 
 run :: Bool -> Options -> IO ()
 run jsonOutput options = do
-    provider <- loadProviderOrExit (optionsUtxoFile options)
+    provider <-
+        case optionsUtxoFile options of
+            Just path ->
+                loadProviderOrExit path
+            Nothing ->
+                dieUser "offline mode requires --utxo-file"
+    runWithProvider provider jsonOutput options
+
+runWithProvider :: (UTxOProvider provider) => provider -> Bool -> Options -> IO ()
+runWithProvider provider jsonOutput options = do
     maybeRegistryUtxo <- queryUTxOByRef provider (optionsRegistryUtxo options)
     registryUtxo <-
         case maybeRegistryUtxo of
