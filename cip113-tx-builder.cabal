@@ -72,12 +72,26 @@ executable cip113-cli
         Cardano.CIP113.CLI.Command.Seize
         Cardano.CIP113.CLI.Command.Transfer
         Cardano.CIP113.CLI.Provider
+        Cardano.CIP113.CLI.Provider.Node
         Cardano.CIP113.CLI.Provider.Offline
 
     build-depends:
         aeson                  >= 2.2  && < 2.3
+      , async
+      , base16-bytestring
+      , bech32
+      , bytestring
+      , cardano-crypto-class
+      , cardano-ledger-api
+      , cardano-ledger-conway
+      , cardano-ledger-core
+      , cardano-ledger-mary
+      , cardano-node-clients
       , containers
+      , directory
+      , microlens
       , optparse-applicative   >= 0.18 && < 0.20
+      , ouroboros-network:api
       , text
 
 test-suite e2e-tests
