@@ -16,19 +16,20 @@ jobs:
 
       - name: Sync version from manifest to cabal
         run: |
-          semver=$(jq -r '."."' .release-please-manifest.json)
+          semver=$(python3 -c "import json; print(json.load(open('.release-please-manifest.json'))['.'])")
           pvp="${semver}.0"
           sed -i "s/^version:.*$/version:       ${pvp}/" cip113-tx-builder.cabal
           echo "Set version: ${pvp}"
 
       - name: Commit if changed
         run: |
+          semver=$(python3 -c "import json; print(json.load(open('.release-please-manifest.json'))['.'])")
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if git diff --quiet; then
             echo "No change"
           else
             git add cip113-tx-builder.cabal
-            git commit -m "chore: sync cabal version to $(jq -r '."."' .release-please-manifest.json)"
+            git commit -m "chore: sync cabal version to ${semver}"
             git push
           fi
