@@ -1,0 +1,11 @@
+{
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb#0": {
+    "address": "addr_test1transferfrom",
+    "value": {
+      "lovelace": 5000000,
+      "0123456789abcdef0123456789abcdef0123456789abcdef01234567": {
+        "CIP113": 50
+      }
+    }
+  }
+}
