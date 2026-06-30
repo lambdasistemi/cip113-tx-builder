@@ -29,7 +29,7 @@ jobs:
 
       - name: Cabal version matches manifest
         run: |
-          manifest=$(jq -r '."."' .release-please-manifest.json)
+          manifest=$(python3 -c "import json; print(json.load(open('.release-please-manifest.json'))['.'])")
           pvp="${manifest}.0"
           cabal=$(grep '^version:' cip113-tx-builder.cabal | awk '{print $2}')
           if [ "$cabal" != "$pvp" ]; then
