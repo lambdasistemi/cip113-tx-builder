@@ -119,6 +119,8 @@
           packages = {
             cip113-tx-builder =
               project.hsPkgs.cip113-tx-builder.components.library;
+            cip113-cli =
+              project.hsPkgs.cip113-tx-builder.components.exes.cip113-cli;
             e2e-tests =
               project.hsPkgs.cip113-tx-builder.components.tests.e2e-tests;
             cardano-node =

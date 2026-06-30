@@ -61,6 +61,25 @@ library
       , serialise
       , text
 
+executable cip113-cli
+    import:          opts, werror
+    hs-source-dirs:  exe
+    main-is:         Main.hs
+
+    other-modules:
+        Cardano.CIP113.CLI.Command.Freeze
+        Cardano.CIP113.CLI.Command.Register
+        Cardano.CIP113.CLI.Command.Seize
+        Cardano.CIP113.CLI.Command.Transfer
+        Cardano.CIP113.CLI.Provider
+        Cardano.CIP113.CLI.Provider.Offline
+
+    build-depends:
+        aeson                  >= 2.2  && < 2.3
+      , containers
+      , optparse-applicative   >= 0.18 && < 0.20
+      , text
+
 test-suite e2e-tests
     import:           opts
 
