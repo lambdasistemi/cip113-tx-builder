@@ -2,12 +2,12 @@
 
 ## Slice 1 - Node Provider
 
-- [ ] T021-S1 Add `Cardano.CIP113.CLI.Provider.Node` with node config,
+- [x] T021-S1 Add `Cardano.CIP113.CLI.Provider.Node` with node config,
   bracketed N2C provider startup, socket existence validation, and a
   `UTxOProvider NodeProvider` instance.
-- [ ] T021-S1 Convert ledger `TxIn` and `TxOut ConwayEra` values into the
+- [x] T021-S1 Convert ledger `TxIn` and `TxOut ConwayEra` values into the
   CLI-local `UTxO`, `UTxORef`, and `UTxOValue` shapes.
-- [ ] T021-S1 Add only the executable dependencies required by the node
+- [x] T021-S1 Add only the executable dependencies required by the node
   provider and verify the provider builds.
 
 ## Slice 2 - CLI Provider Selection
