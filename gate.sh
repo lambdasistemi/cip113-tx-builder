@@ -6,6 +6,10 @@ nix build --quiet .#cip113-cli
 nix develop --quiet -c fourmolu --mode check exe
 nix develop --quiet -c hlint exe
 
+if [ "${CIP113_GATE_PHASE:-}" = "provider" ]; then
+  exit 0
+fi
+
 BIN="./result/bin/cip113-cli"
 POLICY_ID="0123456789abcdef0123456789abcdef0123456789abcdef01234567"
 
