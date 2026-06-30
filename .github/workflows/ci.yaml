@@ -31,7 +31,7 @@ jobs:
         run: |
           manifest=$(sed -n 's/.*"\."[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .release-please-manifest.json)
           pvp="${manifest}.0"
-          cabal=$(grep '^version:' cip113-tx-builder.cabal | awk '{print $2}')
+          read -r _ cabal <<< "$(grep '^version:' cip113-tx-builder.cabal)"
           if [ "$cabal" != "$pvp" ]; then
             echo "Version drift: cabal=$cabal manifest-derived=$pvp"
             exit 1
