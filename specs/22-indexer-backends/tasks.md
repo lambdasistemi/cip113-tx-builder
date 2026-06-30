@@ -2,14 +2,14 @@
 
 ## Slice 1 - HTTP Indexer Providers
 
-- [ ] T022-S1 Add `Cardano.CIP113.CLI.Provider.Blockfrost` with config,
+- [X] T022-S1 Add `Cardano.CIP113.CLI.Provider.Blockfrost` with config,
   endpoint selection from project id prefix, HTTP request handling, JSON
   decoders, and a `UTxOProvider BlockfrostProvider` instance.
-- [ ] T022-S1 Add `Cardano.CIP113.CLI.Provider.Kupo` with config, HTTP request
+- [X] T022-S1 Add `Cardano.CIP113.CLI.Provider.Kupo` with config, HTTP request
   handling, JSON decoders, and a `UTxOProvider KupoProvider` instance.
-- [ ] T022-S1 Convert Blockfrost and Kupo values into the CLI-local `UTxO`,
+- [X] T022-S1 Convert Blockfrost and Kupo values into the CLI-local `UTxO`,
   `UTxORef`, and `UTxOValue` shapes, including hex UTF-8 asset-name decoding.
-- [ ] T022-S1 Add only the executable modules/dependencies required by the
+- [X] T022-S1 Add only the executable modules/dependencies required by the
   indexer providers and verify the CLI builds.
 
 ## Slice 2 - CLI Provider Selection

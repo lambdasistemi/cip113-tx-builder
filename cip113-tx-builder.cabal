@@ -72,6 +72,8 @@ executable cip113-cli
         Cardano.CIP113.CLI.Command.Seize
         Cardano.CIP113.CLI.Command.Transfer
         Cardano.CIP113.CLI.Provider
+        Cardano.CIP113.CLI.Provider.Blockfrost
+        Cardano.CIP113.CLI.Provider.Kupo
         Cardano.CIP113.CLI.Provider.Node
         Cardano.CIP113.CLI.Provider.Offline
 
@@ -89,6 +91,9 @@ executable cip113-cli
       , cardano-node-clients
       , containers
       , directory
+      , http-client
+      , http-client-tls
+      , http-types
       , microlens
       , optparse-applicative   >= 0.18 && < 0.20
       , ouroboros-network:api
