@@ -22,7 +22,7 @@
 
 ## Slice 3 - Gate And Smoke
 
-- [ ] T021-S3 Run `./gate.sh` and record the result.
-- [ ] T021-S3 Capture the missing-socket node-mode smoke evidence.
-- [ ] T021-S3 Update PR metadata with the live devnet smoke follow-up and
+- [x] T021-S3 Run `./gate.sh` and record the result.
+- [x] T021-S3 Capture the missing-socket node-mode smoke evidence.
+- [x] T021-S3 Update PR metadata with the live devnet smoke follow-up and
   final implementation notes.

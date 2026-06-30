@@ -70,9 +70,10 @@ command modules.
 
 ### Slice 2 - CLI Provider Selection
 
-After Q-001 is answered, wire global node flags through `Main.hs` and the
-minimal approved command-scope refactor. Keep offline fallback compatible and
-preserve `--json`.
+Q-001 approved the minimal command-scope refactor. `Main.hs` parses and selects
+the provider, supports node flags before or after the subcommand, and dispatches
+commands either through the offline wrapper or the provider-parameterized
+runner. Offline fallback remains compatible and `--json` is preserved.
 
 ### Slice 3 - Gate And Smoke
 

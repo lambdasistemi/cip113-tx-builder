@@ -34,18 +34,21 @@ the required UTxOs from my local Cardano node instead of an offline JSON file.
 
 ## Scope Note
 
-The current `origin/setup` command modules require `--utxo-file` and load
-`OfflineUTxOProvider` internally. Clean node selection therefore needs a narrow
-scope decision before implementation touches command modules. The ticket owner
-wrote `/tmp/epic-23/cip113-tx-builder-21/questions/Q-001-provider-wiring-scope.md`
-and recommends allowing a mechanical provider-injection refactor in the four
-command modules.
+Q-001 approved a narrow mechanical scope expansion in the four command modules.
+The implementation keeps offline `run` entry points, adds provider-parameterized
+`runWithProvider` entry points, and leaves transaction-building behavior
+unchanged while `Main.hs` owns node/offline provider selection.
 
 ## Test Approach
 
 The required CI gate does not require a live Cardano node. It builds
 `cip113-cli`, checks formatting and linting on `exe/`, keeps an offline smoke
 for fallback behavior, and verifies node mode reports a missing socket as exit
-code 1. A live devnet smoke remains the production boundary proof: run
-`cip113-cli --socket-path <node.sock> --network-magic <magic> register ...`
-against a funded devnet and retain the transcript before the PR leaves draft.
+code 1. The local final smoke also covers the issue-style flag placement:
+`cip113-cli register --socket-path <missing.sock> --network-magic <magic> ...`
+exits 1 with a node socket error.
+
+A live devnet smoke remains the production boundary proof: run
+`cip113-cli register --socket-path <node.sock> --network-magic <magic> ...`
+against a funded devnet and retain the transcript before the draft PR is marked
+ready.
