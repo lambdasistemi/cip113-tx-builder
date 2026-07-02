@@ -1,6 +1,6 @@
 cabal-version: 3.4
 name:          cip113-tx-builder
-version:       0.1.0.0
+version:       0.1.1.0
 synopsis:      CIP-113 programmable token transaction builders
 description:
     Monadic transaction builders for CIP-113 programmable token operations
