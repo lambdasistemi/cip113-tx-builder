@@ -69,7 +69,9 @@ executable cip113-cli
     other-modules:
         Cardano.CIP113.CLI.Command.Freeze
         Cardano.CIP113.CLI.Command.Register
+        Cardano.CIP113.CLI.Command.Seal
         Cardano.CIP113.CLI.Command.Seize
+        Cardano.CIP113.CLI.Command.Sign
         Cardano.CIP113.CLI.Command.Transfer
         Cardano.CIP113.CLI.Provider
         Cardano.CIP113.CLI.Provider.Blockfrost

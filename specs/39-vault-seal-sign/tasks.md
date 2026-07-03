@@ -8,8 +8,8 @@
 
 ## Slice 2: CLI Commands
 
-- [ ] T039-S2 Add `vault seal` command module delegating vault crypto upstream.
-- [ ] T039-S2 Add `sign` command module reusing upstream key parser and signer.
-- [ ] T039-S2 Wire `vault seal` and `sign` into `exe/Main.hs`.
-- [ ] T039-S2 Register new executable modules in `cip113-tx-builder.cabal`.
-- [ ] T039-S2 Run `./gate.sh`, help smokes, and commit CLI wiring.
+- [X] T039-S2 Add `vault seal` command module delegating vault crypto upstream.
+- [X] T039-S2 Add `sign` command module reusing upstream key parser and signer.
+- [X] T039-S2 Wire `vault seal` and `sign` into `exe/Main.hs`.
+- [X] T039-S2 Register new executable modules in `cip113-tx-builder.cabal`.
+- [X] T039-S2 Run `./gate.sh`, help smokes, and commit CLI wiring.

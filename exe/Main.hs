@@ -32,7 +32,9 @@ import System.IO (hPutStrLn, stderr)
 
 import Cardano.CIP113.CLI.Command.Freeze qualified as Freeze
 import Cardano.CIP113.CLI.Command.Register qualified as Register
+import Cardano.CIP113.CLI.Command.Seal qualified as Seal
 import Cardano.CIP113.CLI.Command.Seize qualified as Seize
+import Cardano.CIP113.CLI.Command.Sign qualified as Sign
 import Cardano.CIP113.CLI.Command.Transfer qualified as Transfer
 import Cardano.CIP113.CLI.Provider (UTxOProvider)
 import Cardano.CIP113.CLI.Provider.Blockfrost (
@@ -64,6 +66,8 @@ data Command
     | Transfer !ProviderOptions !Transfer.Options
     | Freeze !ProviderOptions !Freeze.Options
     | Seize !ProviderOptions !Seize.Options
+    | Sign !Sign.Options
+    | Seal !Seal.Options
 
 data ProviderOptions = ProviderOptions
     { providerSocketPath :: !(Maybe FilePath)
@@ -119,7 +123,32 @@ cliParser =
                         (Seize <$> providerOptionsParser <*> Seize.parser)
                         (progDesc "Seize CIP-113 tokens")
                     )
+                <> command
+                    "sign"
+                    ( info
+                        (Sign <$> Sign.parser)
+                        ( progDesc
+                            "Attach a vkey witness to a tx body (CBOR hex stdin to stdout)"
+                        )
+                    )
+                <> command
+                    "vault"
+                    ( info
+                        vaultParser
+                        (progDesc "Manage age-encrypted signing key vaults")
+                    )
             )
+
+vaultParser :: Parser Command
+vaultParser =
+    hsubparser
+        ( command
+            "seal"
+            ( info
+                (Seal <$> Seal.parser)
+                (progDesc "Encrypt a signing key into an age scrypt vault")
+            )
+        )
 
 providerOptionsParser :: Parser ProviderOptions
 providerOptionsParser =
@@ -183,6 +212,10 @@ runCli options =
                 Seize.run
                 Seize.runWithProvider
                 seizeOptions
+        Sign signOptions ->
+            Sign.run signOptions
+        Seal sealOptions ->
+            Seal.run sealOptions
 
 runWithSelectedProvider ::
     CliOptions ->
