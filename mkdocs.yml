@@ -39,4 +39,5 @@ markdown_extensions:
 nav:
   - Home: index.md
   - CIP-113: cip-113.md
+  - CLI usage: cli.md
   - Contributing: contributing.md
