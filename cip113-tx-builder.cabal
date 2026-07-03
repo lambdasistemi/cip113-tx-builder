@@ -89,6 +89,7 @@ executable cip113-cli
       , cardano-ledger-core
       , cardano-ledger-mary
       , cardano-node-clients
+      , cardano-wallet-tools
       , containers
       , directory
       , http-client

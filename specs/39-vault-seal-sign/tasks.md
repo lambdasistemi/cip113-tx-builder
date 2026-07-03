@@ -2,9 +2,9 @@
 
 ## Slice 1: Dependency Wiring
 
-- [ ] T039-S1 Add pinned `cardano-wallet-tools` source repository package.
-- [ ] T039-S1 Add executable-only `cardano-wallet-tools` build dependency.
-- [ ] T039-S1 Run `./gate.sh` and commit dependency wiring.
+- [X] T039-S1 Add pinned `cardano-wallet-tools` source repository package.
+- [X] T039-S1 Add executable-only `cardano-wallet-tools` build dependency.
+- [X] T039-S1 Run `./gate.sh` and commit dependency wiring.
 
 ## Slice 2: CLI Commands
 
