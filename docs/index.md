@@ -23,6 +23,9 @@ All three surfaces share the same transaction-building core. The E2E test suite 
 | **Freeze** | Lock tokens at an always-fail address (third-party lock) |
 | **Seize** | Redirect tokens to a new owner (third-party redirect) |
 
+Each operation is available from the `cip113-cli` binary — see
+[CLI usage](cli.md) for commands, flags, and the vault seal/sign workflow.
+
 ## Quick start
 
 ```bash
@@ -43,4 +46,5 @@ nix build .#cip113-wasm
 ## Documentation
 
 - [What is CIP-113?](cip-113.md) — the standard, its architecture, and current status
+- [CLI usage](cli.md) — commands, flags, and the vault seal/sign workflow
 - [Contributing](contributing.md) — how this project tracks and implements the spec
