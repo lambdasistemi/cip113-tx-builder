@@ -9,8 +9,8 @@
 
 ## Ticket Owner Verification
 
-- [ ] T043-V1 Flip repository Pages source to GitHub Actions and verify `build_type=workflow`.
-- [ ] T043-V1 Push draft PR against `setup`.
-- [ ] T043-V1 Verify a real PR preview URL returns HTTP 200 and is linked by a PR comment.
-- [ ] T043-V1 Verify closing a preview PR removes the preview URL with HTTP 404.
-- [ ] T043-V1 Record post-merge Pages deployment verification as deferred to the epic owner.
+- [X] T043-V1 Flip repository Pages source to GitHub Actions and verify `build_type=workflow`.
+- [X] T043-V1 Push draft PR against `setup`.
+- [X] T043-V1 Verify a real PR preview URL returns HTTP 200 and is linked by a PR comment.
+- [X] T043-V1 Verify closing a preview PR removes the preview URL with HTTP 404.
+- [X] T043-V1 Record post-merge Pages deployment verification as deferred to the epic owner.
