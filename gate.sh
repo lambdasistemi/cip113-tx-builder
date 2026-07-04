@@ -7,6 +7,8 @@ mapfile -t hs_files < <(git ls-files '*.hs')
 nix develop --quiet -c fourmolu -m check "${hs_files[@]}"
 nix develop --quiet -c hlint src exe e2e-test
 
+nix develop --quiet .#docs -c mkdocs build --strict
+
 cip113_cli_out=$(nix build --print-out-paths .#cip113-cli)
 cardano_node_out=$(nix build --print-out-paths .#cardano-node)
 nix build .#e2e-tests
