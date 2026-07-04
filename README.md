@@ -34,7 +34,8 @@ nix build .#cip113-wasm         # build WASM artifact
 ```bash
 nix develop .#docs
 just serve-docs      # preview at http://localhost:8000
-just deploy-docs     # publish to GitHub Pages
 ```
 
-Full documentation at **https://lambdasistemi.github.io/cip113-tx-builder**
+Full documentation is published at **https://lambdasistemi.github.io/cip113-tx-builder**.
+
+Pull requests publish rendered docs previews at `https://preview.dev.plutimus.com/lambdasistemi/cip113-tx-builder/pr-<N>/`.
