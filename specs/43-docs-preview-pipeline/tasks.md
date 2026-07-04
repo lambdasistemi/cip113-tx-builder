@@ -2,10 +2,10 @@
 
 ## Slice 1: Workflow and README
 
-- [ ] T043-S1 Add `.github/workflows/deploy-docs.yml` adapted for `setup`, `.#docs`, Pages deploy, PR previews, and preview cleanup.
-- [ ] T043-S1 Update README `## Docs` to keep local preview guidance, remove manual publish instructions, and mention live docs plus PR previews.
-- [ ] T043-S1 Run the local docs gate with `./gate.sh`.
-- [ ] T043-S1 Commit the slice as `ci: add docs preview and pages workflow` with `Tasks: T043-S1`.
+- [X] T043-S1 Add `.github/workflows/deploy-docs.yml` adapted for `setup`, `.#docs`, Pages deploy, PR previews, and preview cleanup.
+- [X] T043-S1 Update README `## Docs` to keep local preview guidance, remove manual publish instructions, and mention live docs plus PR previews.
+- [X] T043-S1 Run the local docs gate with `./gate.sh`.
+- [X] T043-S1 Commit the slice as `ci: add docs preview and pages workflow` with `Tasks: T043-S1`.
 
 ## Ticket Owner Verification
 
