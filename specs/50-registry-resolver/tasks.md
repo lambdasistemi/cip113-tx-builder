@@ -2,12 +2,12 @@
 
 ## Slice 1: Live Registry Resolver
 
-- [ ] T050-S1 Add exposed module `Cardano.CIP113.Registry` or equivalent with registry UTxO decoding, linked-list traversal, insertion-point resolution, existing-node lookup, and explicit malformed-state errors.
-- [ ] T050-S1 Add any required library dependency and exposed-module entry to `cip113-tx-builder.cabal`.
-- [ ] T050-S1 Add `RegistryResolverSpec` under `e2e-test/Cardano/CIP113/E2E/` and wire it into `e2e-main.hs` / the e2e test component.
-- [ ] T050-S1 Prove RED by running `nix build .#e2e-tests` after wiring the failing spec and before implementing the resolver.
-- [ ] T050-S1 Prove GREEN by running `./gate.sh`.
-- [ ] T050-S1 Commit the slice as `feat: add CIP-113 registry resolver` with `Tasks: T050-S1`.
+- [X] T050-S1 Add exposed module `Cardano.CIP113.Registry` or equivalent with registry UTxO decoding, linked-list traversal, insertion-point resolution, existing-node lookup, and explicit malformed-state errors.
+- [X] T050-S1 Add any required library dependency and exposed-module entry to `cip113-tx-builder.cabal`.
+- [X] T050-S1 Add `RegistryResolverSpec` under `e2e-test/Cardano/CIP113/E2E/` and wire it into `e2e-main.hs` / the e2e test component.
+- [X] T050-S1 Prove RED by running `nix build .#e2e-tests` after wiring the failing spec and before implementing the resolver.
+- [X] T050-S1 Prove GREEN by running `./gate.sh`.
+- [X] T050-S1 Commit the slice as `feat: add CIP-113 registry resolver` with `Tasks: T050-S1`.
 
 ## Ticket Owner Verification
 
