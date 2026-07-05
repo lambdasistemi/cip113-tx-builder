@@ -13,15 +13,15 @@
 
 ## Slice 2 - Tutorial E2E and drift check
 
-- [ ] T044-S2 Add an E2E tutorial spec that compares the tutorial command
+- [X] T044-S2 Add an E2E tutorial spec that compares the tutorial command
       blocks to the command sequence used by the test.
-- [ ] T044-S2 Run the tutorial sequence against a live devnet using the built
+- [X] T044-S2 Run the tutorial sequence against a live devnet using the built
       `cip113-cli`, including vault-backed signing and plaintext signing.
-- [ ] T044-S2 Prepare transfer/freeze/seize ledger state with distinct
+- [X] T044-S2 Prepare transfer/freeze/seize ledger state with distinct
       registry credentials using the existing CLI smoke workaround pattern.
-- [ ] T044-S2 Assert decoded signed transactions submit successfully for every
+- [X] T044-S2 Assert decoded signed transactions submit successfully for every
       sign-and-submit step.
-- [ ] T044-S2 Wire the spec into the E2E suite and pass focused E2E checks plus
+- [X] T044-S2 Wire the spec into the E2E suite and pass focused E2E checks plus
       `./gate.sh`, then commit with the required trailer.
 
 ## Finalization
