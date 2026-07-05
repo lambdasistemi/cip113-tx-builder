@@ -4,6 +4,7 @@ module Cardano.CIP113.CLI.Command.Register (
     Options (..),
     parser,
     run,
+    runWithNodeProvider,
     runWithProvider,
 ) where
 
@@ -38,6 +39,8 @@ import Cardano.CIP113.CLI.Provider.Offline (
     OfflineUTxOProvider,
     loadOfflineUTxOProvider,
  )
+import Cardano.CIP113.Deployment (CIP113Deployment)
+import Cardano.Node.Client.Provider qualified as Node
 
 data Options = Options
     { optionsUtxoFile :: !(Maybe FilePath)
@@ -102,6 +105,10 @@ runWithProvider provider jsonOutput options = do
     if jsonOutput
         then putStrLn ("{\"tx\":\"" <> txHex <> "\"}")
         else putStrLn txHex
+
+runWithNodeProvider :: CIP113Deployment -> Node.Provider IO -> Bool -> Options -> IO ()
+runWithNodeProvider _deployment _provider _jsonOutput _options =
+    dieUser "real register builder pending"
 
 loadProviderOrExit :: FilePath -> IO OfflineUTxOProvider
 loadProviderOrExit path = do

@@ -2,10 +2,10 @@
 
 ## Slice 1 - Node-only deployment plumbing
 
-- [ ] T052-S1 Load `--deployment` into a value that can be passed to the register command path.
-- [ ] T052-S1 Add a register-specific node-provider branch in `exe/Main.hs` and clear exit-1 errors for missing deployment or non-node real register builds.
-- [ ] T052-S1 Preserve sibling command behavior and avoid edits to transfer/freeze/seize modules.
-- [ ] T052-S1 Pass the focused CLI build/lint command and commit with the required trailer.
+- [X] T052-S1 Load `--deployment` into a value that can be passed to the register command path.
+- [X] T052-S1 Add a register-specific node-provider branch in `exe/Main.hs` and clear exit-1 errors for missing deployment or non-node real register builds.
+- [X] T052-S1 Preserve sibling command behavior and avoid edits to transfer/freeze/seize modules.
+- [X] T052-S1 Pass the focused CLI build/lint command and commit with the required trailer.
 
 ## Slice 2 - Real register builder output
 
