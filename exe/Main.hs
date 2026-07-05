@@ -209,12 +209,7 @@ runCli options =
         Register commandProviderOptions registerOptions ->
             runRegister options commandProviderOptions registerOptions
         Transfer commandProviderOptions transferOptions ->
-            runWithSelectedProvider
-                options
-                commandProviderOptions
-                Transfer.run
-                Transfer.runWithProvider
-                transferOptions
+            runTransfer options commandProviderOptions transferOptions
         Freeze commandProviderOptions freezeOptions ->
             runWithSelectedProvider
                 options
@@ -257,6 +252,32 @@ runRegister cliOptions commandProviderOptions registerOptions = do
             dieUser registerRequiresNodeMessage
         UseKupoProvider _ ->
             dieUser registerRequiresNodeMessage
+        InvalidNodeProvider ->
+            dieUser "node provider requires both --socket-path and --network-magic"
+
+runTransfer :: CliOptions -> ProviderOptions -> Transfer.Options -> IO ()
+runTransfer cliOptions commandProviderOptions transferOptions = do
+    maybeDeployment <- loadSelectedDeployment cliOptions commandProviderOptions
+    deployment <-
+        case maybeDeployment of
+            Just deployment ->
+                pure deployment
+            Nothing ->
+                dieUser "transfer requires --deployment FILE"
+    case selectProviderConfig cliOptions commandProviderOptions of
+        UseNodeProvider nodeConfig ->
+            withRegisterNodeProvider nodeConfig $ \provider ->
+                Transfer.runWithNodeProvider
+                    deployment
+                    provider
+                    (cliJson cliOptions)
+                    transferOptions
+        UseOfflineProvider ->
+            dieUser transferRequiresNodeMessage
+        UseBlockfrostProvider _ ->
+            dieUser transferRequiresNodeMessage
+        UseKupoProvider _ ->
+            dieUser transferRequiresNodeMessage
         InvalidNodeProvider ->
             dieUser "node provider requires both --socket-path and --network-magic"
 
@@ -349,6 +370,10 @@ withRegisterNodeProvider NodeProviderConfig{nodeSocketPath, nodeNetworkMagic} k 
 registerRequiresNodeMessage :: String
 registerRequiresNodeMessage =
     "real register transaction building currently requires the node backend"
+
+transferRequiresNodeMessage :: String
+transferRequiresNodeMessage =
+    "real transfer transaction building currently requires the node backend"
 
 data SelectedProvider
     = UseOfflineProvider

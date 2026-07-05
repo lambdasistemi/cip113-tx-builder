@@ -129,6 +129,7 @@ test-suite e2e-tests
         Cardano.CIP113.E2E.RegisterSpec
         Cardano.CIP113.E2E.RegistryResolverSpec
         Cardano.CIP113.E2E.ThirdPartySpec
+        Cardano.CIP113.E2E.TransferCLISpec
 
     build-depends:
         aeson                  >= 2.2  && < 2.3
