@@ -35,8 +35,8 @@
 
 ## Finalization
 
-- [ ] T044-V1 Update the draft PR body with delivered behavior, drift
+- [X] T044-V1 Update the draft PR body with delivered behavior, drift
       prevention mechanism, and verification evidence.
-- [ ] T044-V1 Run final `./gate.sh`.
-- [ ] T044-V1 Check off finalization boxes in this task file.
-- [ ] T044-V1 Request parent merge review with a Q-file instead of self-merging.
+- [X] T044-V1 Run final `./gate.sh`.
+- [X] T044-V1 Check off finalization boxes in this task file.
+- [X] T044-V1 Request parent merge review with a Q-file instead of self-merging.
