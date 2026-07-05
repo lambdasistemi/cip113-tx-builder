@@ -9,4 +9,4 @@ nix develop --quiet -c hlint src exe e2e-test
 
 nix build .#cip113-cli
 nix build .#e2e-tests
-./result/bin/e2e-tests
+(cd e2e-test && ../result/bin/e2e-tests)
