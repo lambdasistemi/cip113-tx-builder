@@ -22,6 +22,8 @@ The three seed inputs are, in order, the protocol-params seed, registry seed, an
 
 The slice should relocate helper logic that is part of descriptor derivation, including issuance mint script byte derivation and the varying-script split used to build `IssuanceCborHex`. The e2e `Deploy.hs` module should import the descriptor type and function, call it after bootstrap UTxO selection, and keep only chain IO and transaction assembly locally.
 
+Add a pure Hspec descriptor test module in the existing `e2e-tests` suite before the refactor lands. The RED should fail because `Cardano.CIP113.Deployment` / `computeDeployment` is not present yet. The GREEN should load the fixture blueprint, build deterministic synthetic seed `TxIn`s, compute a descriptor, and assert deterministic field relationships such as script hashes matching their scripts and descriptor addresses using the expected script credentials. This proves the pure function without starting a devnet.
+
 ## Slice 2: JSON Round-Trip
 
 Add JSON instances or equivalent manual Aeson wiring for `CIP113Deployment`.
@@ -32,7 +34,7 @@ Use stable representations:
 - Script hashes and policy IDs: base16 raw hash bytes, following the existing `scriptHashBytes` / provider `policyText` style.
 - Addresses: base16 `serialiseAddr` with `decodeAddrEither`.
 
-The round-trip test should construct three deterministic synthetic `TxIn`s, load `fixtures/cip113-blueprint.json`, compute the descriptor, encode it, decode it, and assert that the decoded descriptor preserves the descriptor values needed by consumers. Keep this as a pure Hspec test module added to the existing `e2e-tests` suite.
+The round-trip test should extend the pure descriptor test module from Slice 1: construct three deterministic synthetic `TxIn`s, load `fixtures/cip113-blueprint.json`, compute the descriptor, encode it, decode it, and assert that the decoded descriptor preserves the descriptor values needed by consumers.
 
 ## Verification
 
