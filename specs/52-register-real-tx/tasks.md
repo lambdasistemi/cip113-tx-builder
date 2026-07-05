@@ -24,6 +24,6 @@
 
 ## Finalization
 
-- [ ] T052-V1 Update PR #58 body with delivered behavior and verification evidence.
-- [ ] T052-V1 Run final `./gate.sh`.
-- [ ] T052-V1 Request parent merge review with a Q-file instead of self-merging.
+- [X] T052-V1 Update PR #58 body with delivered behavior and verification evidence.
+- [X] T052-V1 Run final `./gate.sh`.
+- [X] T052-V1 Request parent merge review with a Q-file instead of self-merging.
