@@ -125,6 +125,7 @@ test-suite e2e-tests
     other-modules:
         Cardano.CIP113.E2E.Deploy
         Cardano.CIP113.E2E.DeploymentSpec
+        Cardano.CIP113.E2E.FreezeSeizeCLISpec
         Cardano.CIP113.E2E.RegisterCLISpec
         Cardano.CIP113.E2E.RegisterSpec
         Cardano.CIP113.E2E.RegistryResolverSpec
