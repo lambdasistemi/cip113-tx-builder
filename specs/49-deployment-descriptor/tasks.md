@@ -12,10 +12,10 @@
 
 ## Slice 2: JSON Round-Trip
 
-- [ ] T049-S2 Add JSON serialization/deserialization for `CIP113Deployment` using stable byte encodings for scripts, hashes, policies, and addresses.
-- [ ] T049-S2 Extend the pure descriptor spec with an encode/decode round-trip for a descriptor computed from the fixture blueprint and deterministic seed `TxIn`s.
-- [ ] T049-S2 Run `./gate.sh`.
-- [ ] T049-S2 Commit the slice as `feat: serialize CIP-113 deployment descriptor` with `Tasks: T049-S2`.
+- [X] T049-S2 Add JSON serialization/deserialization for `CIP113Deployment` using stable byte encodings for scripts, hashes, policies, and addresses.
+- [X] T049-S2 Extend the pure descriptor spec with an encode/decode round-trip for a descriptor computed from the fixture blueprint and deterministic seed `TxIn`s.
+- [X] T049-S2 Run `./gate.sh`.
+- [X] T049-S2 Commit the slice as `feat: serialize CIP-113 deployment descriptor` with `Tasks: T049-S2`.
 
 ## Ticket Owner Verification
 
