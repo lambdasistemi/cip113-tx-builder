@@ -24,6 +24,15 @@
 - [X] T044-S2 Wire the spec into the E2E suite and pass focused E2E checks plus
       `./gate.sh`, then commit with the required trailer.
 
+## Slice 3 - CI parity for tutorial vault seal
+
+- [X] T044-S3 Add `util-linux`/`script` to the GitHub Actions E2E test PATH so
+      `cip113-cli vault seal` has a pseudo-TTY in CI.
+- [X] T044-S3 Add the same `util-linux` PATH setup to `gate.sh` so local and CI
+      tutorial E2E execution stay aligned.
+- [X] T044-S3 Verify with the exact CI-shaped E2E command and `./gate.sh`, then
+      commit with the required trailer.
+
 ## Finalization
 
 - [ ] T044-V1 Update the draft PR body with delivered behavior, drift
