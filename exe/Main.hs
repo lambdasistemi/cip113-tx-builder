@@ -1,9 +1,12 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes #-}
 
 module Main (main) where
 
 import Control.Applicative (optional, (<|>))
+import Control.Concurrent.Async (withAsync)
 import Control.Exception (IOException, displayException, try)
+import Control.Monad (void)
 import Data.Aeson qualified as Aeson
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -52,6 +55,15 @@ import Cardano.CIP113.CLI.Provider.Node (
     withNodeProvider,
  )
 import Cardano.CIP113.Deployment (CIP113Deployment)
+import Cardano.Node.Client.N2C.Connection (
+    newLSQChannel,
+    newLTxSChannel,
+    runNodeClient,
+ )
+import Cardano.Node.Client.N2C.Provider (mkN2CProvider)
+import Cardano.Node.Client.Provider qualified as Node
+import Ouroboros.Network.Magic (NetworkMagic (..))
+import System.Directory (doesPathExist)
 
 -- Exit codes:
 --   0 success
@@ -195,12 +207,7 @@ runCli :: CliOptions -> IO ()
 runCli options =
     case cliCommand options of
         Register commandProviderOptions registerOptions ->
-            runWithSelectedProvider
-                options
-                commandProviderOptions
-                Register.run
-                Register.runWithProvider
-                registerOptions
+            runRegister options commandProviderOptions registerOptions
         Transfer commandProviderOptions transferOptions ->
             runWithSelectedProvider
                 options
@@ -227,6 +234,32 @@ runCli options =
         Seal sealOptions ->
             Seal.run sealOptions
 
+runRegister :: CliOptions -> ProviderOptions -> Register.Options -> IO ()
+runRegister cliOptions commandProviderOptions registerOptions = do
+    maybeDeployment <- loadSelectedDeployment cliOptions commandProviderOptions
+    deployment <-
+        case maybeDeployment of
+            Just deployment ->
+                pure deployment
+            Nothing ->
+                dieUser "register requires --deployment FILE"
+    case selectProviderConfig cliOptions commandProviderOptions of
+        UseNodeProvider nodeConfig ->
+            withRegisterNodeProvider nodeConfig $ \provider ->
+                Register.runWithNodeProvider
+                    deployment
+                    provider
+                    (cliJson cliOptions)
+                    registerOptions
+        UseOfflineProvider ->
+            dieUser registerRequiresNodeMessage
+        UseBlockfrostProvider _ ->
+            dieUser registerRequiresNodeMessage
+        UseKupoProvider _ ->
+            dieUser registerRequiresNodeMessage
+        InvalidNodeProvider ->
+            dieUser "node provider requires both --socket-path and --network-magic"
+
 runWithSelectedProvider ::
     CliOptions ->
     ProviderOptions ->
@@ -240,7 +273,7 @@ runWithSelectedProvider
     runOffline
     runNode
     commandOptions = do
-        loadSelectedDeployment cliOptions commandProviderOptions
+        void (loadSelectedDeployment cliOptions commandProviderOptions)
         case selectProviderConfig cliOptions commandProviderOptions of
             UseOfflineProvider ->
                 runOffline (cliJson cliOptions) commandOptions
@@ -257,11 +290,11 @@ runWithSelectedProvider
                 dieUser
                     "node provider requires both --socket-path and --network-magic"
 
-loadSelectedDeployment :: CliOptions -> ProviderOptions -> IO ()
+loadSelectedDeployment :: CliOptions -> ProviderOptions -> IO (Maybe CIP113Deployment)
 loadSelectedDeployment cliOptions commandProviderOptions =
     case deploymentPath of
         Nothing ->
-            pure ()
+            pure Nothing
         Just path -> do
             loaded <-
                 try
@@ -284,12 +317,38 @@ loadSelectedDeployment cliOptions commandProviderOptions =
                             <> err
                         )
                 Right (Right deployment) ->
-                    deployment `seq` pure ()
+                    deployment `seq` pure (Just deployment)
   where
     globalProviderOptions = cliProviderOptions cliOptions
     deploymentPath =
         providerDeploymentPath commandProviderOptions
             <|> providerDeploymentPath globalProviderOptions
+
+withRegisterNodeProvider ::
+    NodeProviderConfig ->
+    (Node.Provider IO -> IO a) ->
+    IO a
+withRegisterNodeProvider NodeProviderConfig{nodeSocketPath, nodeNetworkMagic} k = do
+    socketExists <- doesPathExist nodeSocketPath
+    if socketExists
+        then do
+            lsqCh <- newLSQChannel 64
+            ltxsCh <- newLTxSChannel 64
+            withAsync
+                ( void $
+                    runNodeClient
+                        (NetworkMagic nodeNetworkMagic)
+                        nodeSocketPath
+                        lsqCh
+                        ltxsCh
+                )
+                $ \_ ->
+                    k (mkN2CProvider lsqCh)
+        else fail ("node socket path does not exist: " <> nodeSocketPath)
+
+registerRequiresNodeMessage :: String
+registerRequiresNodeMessage =
+    "real register transaction building currently requires the node backend"
 
 data SelectedProvider
     = UseOfflineProvider
