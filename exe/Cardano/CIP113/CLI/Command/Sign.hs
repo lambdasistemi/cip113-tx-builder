@@ -4,19 +4,27 @@ module Cardano.CIP113.CLI.Command.Sign (
     run,
 ) where
 
+import Cardano.Crypto.Hash.Class (Hash, hashToBytes)
+import Cardano.Ledger.Api.Tx (bodyTxL)
+import Cardano.Ledger.Conway (ConwayEra)
+import Cardano.Ledger.Core (TopTx, TxBody)
+import Cardano.Ledger.Hashes (EraIndependentTxBody, HASH, extractHash, hashAnnotated)
+import Cardano.Tx.Ledger (ConwayTx)
+import Cardano.Tx.Sign.AttachWitness qualified as Structured
 import Cardano.Wallet.Tools.Cli.Vault (
     SigningKeySource,
     loadSignerFromSource,
     signingKeySourceParser,
  )
 import Cardano.Wallet.Tools.Sign (
-    attachWitnesses,
-    signTxBody,
-    transactionBodyBytes,
+    TxBodyBytes (..),
  )
+import Cardano.Wallet.Tools.Sign qualified as WalletSign
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Base16 qualified as B16
+import Data.Set qualified as Set
+import Lens.Micro ((^.))
 import Options.Applicative (Parser)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
@@ -32,25 +40,41 @@ parser =
 run :: Options -> IO ()
 run options = do
     signer <- loadSignerFromSource (optionsSigningKeySource options)
-    txBytes <- readCborHex
-    body <-
-        either (die . ("cannot extract tx body: " <>) . show) pure $
-            transactionBodyBytes txBytes
-    witness <- signTxBody signer body
-    signedTx <-
-        either (die . ("cannot attach witness: " <>) . show) pure $
-            attachWitnesses [witness] txBytes
-    writeCborHex signedTx
+    txHex <- readCborHexInput
+    writeCborHexInput =<< attachStructured signer txHex
 
-readCborHex :: IO ByteString
-readCborHex = do
-    input <- stripPipeWhitespace <$> BS.getContents
-    either (die . ("invalid CBOR hex: " <>)) pure $
-        B16.decode input
+attachStructured :: WalletSign.Signer IO -> ByteString -> IO ByteString
+attachStructured signer txHex = do
+    tx <-
+        either (die . ("cannot decode unsigned tx: " <>) . show) pure $
+            Structured.decodeUnsignedTxHex txHex
+    witness <- WalletSign.signTxBody signer (TxBodyBytes (bodyHashBytes tx))
+    ledgerWitness <-
+        either (die . ("cannot decode structured witness: " <>) . show) pure $
+            Structured.decodeVKeyWitnessHex
+                1
+                (B16.encode (WalletSign.encodeDetachedWitness witness))
+    pure $
+        Structured.encodeSignedTxHex $
+            Structured.attachWitnesses (Set.singleton ledgerWitness) tx
 
-writeCborHex :: ByteString -> IO ()
-writeCborHex =
-    BS.putStr . B16.encode
+bodyHashBytes :: ConwayTx -> ByteString
+bodyHashBytes tx =
+    hashToBytes bodyHash
+  where
+    body :: TxBody TopTx ConwayEra
+    body = tx ^. bodyTxL
+
+    bodyHash :: Hash HASH EraIndependentTxBody
+    bodyHash = extractHash (hashAnnotated body)
+
+readCborHexInput :: IO ByteString
+readCborHexInput =
+    stripPipeWhitespace <$> BS.getContents
+
+writeCborHexInput :: ByteString -> IO ()
+writeCborHexInput =
+    BS.putStr
 
 stripPipeWhitespace :: ByteString -> ByteString
 stripPipeWhitespace =

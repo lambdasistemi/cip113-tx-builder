@@ -17,10 +17,10 @@
 
 ## Slice 3 - CLI e2e smoke and docs
 
-- [ ] T052-S3 Add a CLI subprocess e2e smoke that pipes `register` output through `sign`, submits through the N2C submitter, and asserts `Submitted`.
-- [ ] T052-S3 Wire the new smoke into the e2e test suite/package registration.
-- [ ] T052-S3 Document the node-only `register --deployment` constraint in `docs/cli.md`.
-- [ ] T052-S3 Pass `./gate.sh` and commit with the required trailer.
+- [X] T052-S3 Add a CLI subprocess e2e smoke that pipes `register` output through `sign`, submits through the N2C submitter, and asserts `Submitted`.
+- [X] T052-S3 Wire the new smoke into the e2e test suite/package registration.
+- [X] T052-S3 Document the node-only `register --deployment` constraint in `docs/cli.md`.
+- [X] T052-S3 Pass `./gate.sh` and commit with the required trailer.
 
 ## Finalization
 

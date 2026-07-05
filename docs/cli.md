@@ -33,6 +33,12 @@ against stdin/`--utxo-file`.
 decoded as a CIP-113 deployment descriptor before the command runs; a
 per-command descriptor overrides a global one.
 
+Real `register --deployment FILE` transaction building is supported only
+against a local node. Pass `--socket-path`, `--network-magic`, and
+`--change-address` so the command can query live registry UTxOs, balance the
+unsigned transaction, and return change. Offline JSON, Blockfrost, and Kupo
+register paths remain validation/preview surfaces for now.
+
 ## register
 
 Register a CIP-113 policy.
@@ -40,8 +46,9 @@ Register a CIP-113 policy.
 ```bash
 cip113-cli register \
   --deployment deployment.json \
-  --utxo-file utxos.json \
-  --registry-utxo <txid>#<ix> \
+  --socket-path /path/to/node.socket \
+  --network-magic 42 \
+  --change-address <hex-serialized-address> \
   --token-name <name> \
   --policy-id <56-char-hex>
 ```

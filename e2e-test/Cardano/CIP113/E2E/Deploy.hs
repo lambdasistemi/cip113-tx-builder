@@ -9,6 +9,7 @@ module Cardano.CIP113.E2E.Deploy (
     issuanceMintPolicyId,
     nftValue,
     withCIP113Devnet,
+    withCIP113DevnetSocket,
 ) where
 
 import Control.Concurrent (threadDelay)
@@ -75,6 +76,11 @@ import PlutusTx.IsData.Class (ToData (..))
 
 withCIP113Devnet :: (LSQChannel -> LTxSChannel -> IO a) -> IO a
 withCIP113Devnet action =
+    withCIP113DevnetSocket $ \_sock lsq ltxs ->
+        action lsq ltxs
+
+withCIP113DevnetSocket :: (FilePath -> LSQChannel -> LTxSChannel -> IO a) -> IO a
+withCIP113DevnetSocket action =
     withCardanoNode "genesis" $ \sock _startMs -> do
         lsqCh <- newLSQChannel 16
         ltxsCh <- newLTxSChannel 16
@@ -101,7 +107,7 @@ withCIP113Devnet action =
                     "Node connection closed \
                     \unexpectedly"
             Nothing -> pure ()
-        action lsqCh ltxsCh `finally` cancel nodeThread
+        action sock lsqCh ltxsCh `finally` cancel nodeThread
 
 {- | Deploy CIP-113 to a running devnet and return all script handles.
 

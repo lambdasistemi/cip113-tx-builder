@@ -125,6 +125,7 @@ test-suite e2e-tests
     other-modules:
         Cardano.CIP113.E2E.Deploy
         Cardano.CIP113.E2E.DeploymentSpec
+        Cardano.CIP113.E2E.RegisterCLISpec
         Cardano.CIP113.E2E.RegisterSpec
         Cardano.CIP113.E2E.RegistryResolverSpec
         Cardano.CIP113.E2E.ThirdPartySpec
@@ -132,6 +133,7 @@ test-suite e2e-tests
     build-depends:
         aeson                  >= 2.2  && < 2.3
       , async
+      , base16-bytestring
       , bytestring
       , cardano-crypto-class
       , cardano-ledger-api       >= 1.13 && < 3
@@ -143,8 +145,12 @@ test-suite e2e-tests
       , cardano-tx-tools
       , cip113-tx-builder
       , containers
+      , directory
+      , filepath
       , hspec                    >= 2.11 && < 2.12
       , microlens                >= 0.4  && < 0.5
+      , process
       , plutus-core              >= 1.60 && < 3
       , plutus-tx                >= 1.60 && < 3
+      , temporary
       , text

@@ -52,9 +52,10 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 
 import Cardano.Ledger.Address (Addr)
+import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Conway (ConwayEra)
 import Cardano.Ledger.Core (Script)
-import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue, PolicyID)
+import Cardano.Ledger.Mary.Value (AssetName (..), MaryValue (..), MultiAsset (..), PolicyID)
 import Cardano.Ledger.TxIn (TxIn)
 import PlutusTx.IsData.Class (ToData)
 
@@ -95,6 +96,12 @@ data TokenMint
 -- | Derive the registry NFT asset name from a 28-byte policy ID.
 registryNftName :: RegistryNode -> AssetName
 registryNftName node = AssetName (toShort (rnKey node))
+
+registryNodeValue :: PolicyID -> RegistryNode -> MaryValue
+registryNodeValue policy node =
+    MaryValue
+        (Coin 2_000_000)
+        (MultiAsset (Map.singleton policy (Map.singleton (registryNftName node) 1)))
 
 {- | Build a CIP-113 registry insertion transaction.
 
@@ -174,9 +181,7 @@ registerTx
         void $ payTo' registryAddr predecessorValue updatedPredecessor
 
         -- New registry node output (value includes the registry NFT).
-        -- Start with 0 lovelace; raised to min-UTxO by the builder via SendMin.
-        -- The registry NFT is minted separately; the balancer accounts for it.
-        void $ payTo' registryAddr (mempty :: MaryValue) newNode
+        void $ payTo' registryAddr (registryNodeValue registryMintPolicyId newNode) newNode
 
         -- Optional initial token mint.
         forM_ mTokenMint $ \(TokenMint pid _ assets rdmr) ->
