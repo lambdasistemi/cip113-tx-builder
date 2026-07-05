@@ -31,16 +31,15 @@ The e2e smoke will exercise the executable boundary:
 
 1. start the existing `withCIP113DevnetSocket` harness;
 2. deploy CIP-113 and write the descriptor to a temp file;
-3. run the built `cip113-cli register` subprocess with node flags, deployment,
-   policy id, and change address;
-4. sign and submit the register transaction, then wait for the registry update;
-5. fund a smart-wallet UTxO carrying the registered token;
-6. run `cip113-cli transfer` with node flags, deployment, change address,
+3. locally insert a transfer-test registry node with a distinct
+   transfer-compatible credential, matching the production registry-node shape;
+4. fund a smart-wallet UTxO carrying the registered token;
+5. run `cip113-cli transfer` with node flags, deployment, change address,
    source smart-wallet address, destination address, policy id, token name, and
    amount;
-7. pipe the emitted body hex through `cip113-cli sign`;
-8. submit the signed transfer transaction through the existing N2C submitter;
-9. assert `Submitted`.
+6. pipe the emitted body hex through `cip113-cli sign`;
+7. submit the signed transfer transaction through the existing N2C submitter;
+8. assert `Submitted`.
 
 ## Slice Breakdown
 
