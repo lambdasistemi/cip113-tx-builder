@@ -3,6 +3,8 @@
 module Main (main) where
 
 import Control.Applicative (optional, (<|>))
+import Control.Exception (IOException, displayException, try)
+import Data.Aeson qualified as Aeson
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Word (Word32)
@@ -49,6 +51,7 @@ import Cardano.CIP113.CLI.Provider.Node (
     NodeProviderConfig (..),
     withNodeProvider,
  )
+import Cardano.CIP113.Deployment (CIP113Deployment)
 
 -- Exit codes:
 --   0 success
@@ -74,6 +77,7 @@ data ProviderOptions = ProviderOptions
     , providerNetworkMagic :: !(Maybe Word32)
     , providerBlockfrostProjectId :: !(Maybe Text)
     , providerKupoUrl :: !(Maybe Text)
+    , providerDeploymentPath :: !(Maybe FilePath)
     }
 
 main :: IO ()
@@ -180,6 +184,12 @@ providerOptionsParser =
                         <> help "Kupo base URL"
                     )
             )
+        <*> optional
+            ( strOption
+                ( long "deployment"
+                    <> help "CIP-113 deployment descriptor JSON file"
+                )
+            )
 
 runCli :: CliOptions -> IO ()
 runCli options =
@@ -229,7 +239,8 @@ runWithSelectedProvider
     commandProviderOptions
     runOffline
     runNode
-    commandOptions =
+    commandOptions = do
+        loadSelectedDeployment cliOptions commandProviderOptions
         case selectProviderConfig cliOptions commandProviderOptions of
             UseOfflineProvider ->
                 runOffline (cliJson cliOptions) commandOptions
@@ -245,6 +256,40 @@ runWithSelectedProvider
             InvalidNodeProvider ->
                 dieUser
                     "node provider requires both --socket-path and --network-magic"
+
+loadSelectedDeployment :: CliOptions -> ProviderOptions -> IO ()
+loadSelectedDeployment cliOptions commandProviderOptions =
+    case deploymentPath of
+        Nothing ->
+            pure ()
+        Just path -> do
+            loaded <-
+                try
+                    ( Aeson.eitherDecodeFileStrict' path ::
+                        IO (Either String CIP113Deployment)
+                    )
+            case loaded of
+                Left err ->
+                    dieUser
+                        ( "failed to read deployment file "
+                            <> show path
+                            <> ": "
+                            <> displayException (err :: IOException)
+                        )
+                Right (Left err) ->
+                    dieUser
+                        ( "failed to decode deployment file "
+                            <> show path
+                            <> ": "
+                            <> err
+                        )
+                Right (Right deployment) ->
+                    deployment `seq` pure ()
+  where
+    globalProviderOptions = cliProviderOptions cliOptions
+    deploymentPath =
+        providerDeploymentPath commandProviderOptions
+            <|> providerDeploymentPath globalProviderOptions
 
 data SelectedProvider
     = UseOfflineProvider
