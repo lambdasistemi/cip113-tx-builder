@@ -41,6 +41,7 @@ library
         Cardano.CIP113.Address
         Cardano.CIP113.Transfer
         Cardano.CIP113.Register
+        Cardano.CIP113.Registry
         Cardano.CIP113.ThirdParty
         Cardano.CIP113.Deployment
         Cardano.CIP113.Scripts
@@ -56,8 +57,10 @@ library
       , cardano-ledger-conway  >= 1.21 && < 3
       , cardano-ledger-core    >= 1.19 && < 3
       , cardano-ledger-mary    >= 1.10 && < 3
+      , cardano-node-clients
       , cardano-tx-tools
       , containers
+      , microlens              >= 0.4  && < 0.5
       , mtl
       , plutus-core            >= 1.60 && < 3
       , plutus-tx              >= 1.60 && < 3
@@ -120,6 +123,7 @@ test-suite e2e-tests
         Cardano.CIP113.E2E.Deploy
         Cardano.CIP113.E2E.DeploymentSpec
         Cardano.CIP113.E2E.RegisterSpec
+        Cardano.CIP113.E2E.RegistryResolverSpec
         Cardano.CIP113.E2E.ThirdPartySpec
 
     build-depends:
