@@ -42,6 +42,7 @@ library
         Cardano.CIP113.Transfer
         Cardano.CIP113.Register
         Cardano.CIP113.ThirdParty
+        Cardano.CIP113.Deployment
         Cardano.CIP113.Scripts
 
     build-depends:
@@ -115,12 +116,14 @@ test-suite e2e-tests
 
     other-modules:
         Cardano.CIP113.E2E.Deploy
+        Cardano.CIP113.E2E.DeploymentSpec
         Cardano.CIP113.E2E.RegisterSpec
         Cardano.CIP113.E2E.ThirdPartySpec
 
     build-depends:
         async
       , bytestring
+      , cardano-crypto-class
       , cardano-ledger-api       >= 1.13 && < 3
       , cardano-ledger-conway    >= 1.21 && < 3
       , cardano-ledger-core      >= 1.19 && < 3
