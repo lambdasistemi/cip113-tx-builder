@@ -11,10 +11,10 @@
 
 ## Ticket Owner Verification
 
-- [ ] T050-V1 Review the driver commit and navigator verification for owned-file scope, RED/GREEN evidence, and commit shape.
-- [ ] T050-V1 Amend this task file into the accepted slice commit with all `T050-S1` boxes checked.
-- [ ] T050-V1 Push the accepted slice to PR #56.
-- [ ] T050-V1 Verify the final `./gate.sh` run locally at HEAD.
-- [ ] T050-V1 Update the PR body with delivered behavior and verification evidence.
-- [ ] T050-V1 Drop `gate.sh` in the final ready-for-review commit.
-- [ ] T050-V1 Write a Q-file asking the epic owner to review and merge PR #56.
+- [X] T050-V1 Review the driver commit and navigator verification for owned-file scope, RED/GREEN evidence, and commit shape.
+- [X] T050-V1 Amend this task file into the accepted slice commit with all `T050-S1` boxes checked.
+- [X] T050-V1 Push the accepted slice to PR #56.
+- [X] T050-V1 Verify the final `./gate.sh` run locally at HEAD.
+- [X] T050-V1 Update the PR body with delivered behavior and verification evidence.
+- [X] T050-V1 Drop `gate.sh` in the final ready-for-review commit.
+- [X] T050-V1 Write a Q-file asking the epic owner to review and merge PR #56.
