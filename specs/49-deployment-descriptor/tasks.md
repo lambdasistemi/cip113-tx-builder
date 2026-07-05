@@ -19,8 +19,8 @@
 
 ## Ticket Owner Verification
 
-- [ ] T049-V1 Push each accepted slice to PR #55 after reviewing the driver commit and navigator verification.
-- [ ] T049-V1 Verify the final `./gate.sh` run locally at HEAD.
-- [ ] T049-V1 Update the PR body with delivered behavior and verification evidence.
-- [ ] T049-V1 Drop `gate.sh` in the final ready-for-review commit.
-- [ ] T049-V1 Mark PR #55 ready for review.
+- [X] T049-V1 Push each accepted slice to PR #55 after reviewing the driver commit and navigator verification.
+- [X] T049-V1 Verify the final `./gate.sh` run locally at HEAD.
+- [X] T049-V1 Update the PR body with delivered behavior and verification evidence.
+- [X] T049-V1 Drop `gate.sh` in the final ready-for-review commit.
+- [X] T049-V1 Mark PR #55 ready for review.
