@@ -28,12 +28,18 @@ subcommand that follows) or repeated after it — a per-command flag overrides
 the global one. With no provider flags at all, the offline backend is used
 against stdin/`--utxo-file`.
 
+`register`, `transfer`, `freeze`, and `seize` also accept a shared
+`--deployment FILE` flag in the same positions as provider flags. The file is
+decoded as a CIP-113 deployment descriptor before the command runs; a
+per-command descriptor overrides a global one.
+
 ## register
 
 Register a CIP-113 policy.
 
 ```bash
 cip113-cli register \
+  --deployment deployment.json \
   --utxo-file utxos.json \
   --registry-utxo <txid>#<ix> \
   --token-name <name> \
@@ -46,6 +52,7 @@ Move CIP-113 tokens between smart wallet addresses.
 
 ```bash
 cip113-cli transfer \
+  --deployment deployment.json \
   --utxo-file utxos.json \
   --from-address <addr> \
   --to-address <addr> \
@@ -60,6 +67,7 @@ Lock tokens at an always-fail address (third-party freeze).
 
 ```bash
 cip113-cli freeze \
+  --deployment deployment.json \
   --utxo-file utxos.json \
   --target-address <addr> \
   --token-name <name> \
@@ -72,6 +80,7 @@ Redirect frozen tokens to a new owner (third-party seize).
 
 ```bash
 cip113-cli seize \
+  --deployment deployment.json \
   --utxo-file utxos.json \
   --target-address <addr> \
   --to-address <addr> \
