@@ -41,18 +41,14 @@ import Cardano.CIP113.CLI.Command.Seal qualified as Seal
 import Cardano.CIP113.CLI.Command.Seize qualified as Seize
 import Cardano.CIP113.CLI.Command.Sign qualified as Sign
 import Cardano.CIP113.CLI.Command.Transfer qualified as Transfer
-import Cardano.CIP113.CLI.Provider (UTxOProvider)
 import Cardano.CIP113.CLI.Provider.Blockfrost (
     BlockfrostProviderConfig (..),
-    withBlockfrostProvider,
  )
 import Cardano.CIP113.CLI.Provider.Kupo (
     KupoProviderConfig (..),
-    withKupoProvider,
  )
 import Cardano.CIP113.CLI.Provider.Node (
     NodeProviderConfig (..),
-    withNodeProvider,
  )
 import Cardano.CIP113.Deployment (CIP113Deployment)
 import Cardano.Node.Client.N2C.Connection (
@@ -211,19 +207,9 @@ runCli options =
         Transfer commandProviderOptions transferOptions ->
             runTransfer options commandProviderOptions transferOptions
         Freeze commandProviderOptions freezeOptions ->
-            runWithSelectedProvider
-                options
-                commandProviderOptions
-                Freeze.run
-                Freeze.runWithProvider
-                freezeOptions
+            runFreeze options commandProviderOptions freezeOptions
         Seize commandProviderOptions seizeOptions ->
-            runWithSelectedProvider
-                options
-                commandProviderOptions
-                Seize.run
-                Seize.runWithProvider
-                seizeOptions
+            runSeize options commandProviderOptions seizeOptions
         Sign signOptions ->
             Sign.run signOptions
         Seal sealOptions ->
@@ -281,35 +267,57 @@ runTransfer cliOptions commandProviderOptions transferOptions = do
         InvalidNodeProvider ->
             dieUser "node provider requires both --socket-path and --network-magic"
 
-runWithSelectedProvider ::
-    CliOptions ->
-    ProviderOptions ->
-    (Bool -> commandOptions -> IO ()) ->
-    (forall provider. (UTxOProvider provider) => provider -> Bool -> commandOptions -> IO ()) ->
-    commandOptions ->
-    IO ()
-runWithSelectedProvider
-    cliOptions
-    commandProviderOptions
-    runOffline
-    runNode
-    commandOptions = do
-        void (loadSelectedDeployment cliOptions commandProviderOptions)
-        case selectProviderConfig cliOptions commandProviderOptions of
-            UseOfflineProvider ->
-                runOffline (cliJson cliOptions) commandOptions
-            UseNodeProvider nodeConfig ->
-                withNodeProvider nodeConfig $ \provider ->
-                    runNode provider (cliJson cliOptions) commandOptions
-            UseBlockfrostProvider blockfrostConfig ->
-                withBlockfrostProvider blockfrostConfig $ \provider ->
-                    runNode provider (cliJson cliOptions) commandOptions
-            UseKupoProvider kupoConfig ->
-                withKupoProvider kupoConfig $ \provider ->
-                    runNode provider (cliJson cliOptions) commandOptions
-            InvalidNodeProvider ->
-                dieUser
-                    "node provider requires both --socket-path and --network-magic"
+runFreeze :: CliOptions -> ProviderOptions -> Freeze.Options -> IO ()
+runFreeze cliOptions commandProviderOptions freezeOptions = do
+    maybeDeployment <- loadSelectedDeployment cliOptions commandProviderOptions
+    deployment <-
+        case maybeDeployment of
+            Just deployment ->
+                pure deployment
+            Nothing ->
+                dieUser "freeze requires --deployment FILE"
+    case selectProviderConfig cliOptions commandProviderOptions of
+        UseNodeProvider nodeConfig ->
+            withRegisterNodeProvider nodeConfig $ \provider ->
+                Freeze.runWithNodeProvider
+                    deployment
+                    provider
+                    (cliJson cliOptions)
+                    freezeOptions
+        UseOfflineProvider ->
+            dieUser freezeRequiresNodeMessage
+        UseBlockfrostProvider _ ->
+            dieUser freezeRequiresNodeMessage
+        UseKupoProvider _ ->
+            dieUser freezeRequiresNodeMessage
+        InvalidNodeProvider ->
+            dieUser "node provider requires both --socket-path and --network-magic"
+
+runSeize :: CliOptions -> ProviderOptions -> Seize.Options -> IO ()
+runSeize cliOptions commandProviderOptions seizeOptions = do
+    maybeDeployment <- loadSelectedDeployment cliOptions commandProviderOptions
+    deployment <-
+        case maybeDeployment of
+            Just deployment ->
+                pure deployment
+            Nothing ->
+                dieUser "seize requires --deployment FILE"
+    case selectProviderConfig cliOptions commandProviderOptions of
+        UseNodeProvider nodeConfig ->
+            withRegisterNodeProvider nodeConfig $ \provider ->
+                Seize.runWithNodeProvider
+                    deployment
+                    provider
+                    (cliJson cliOptions)
+                    seizeOptions
+        UseOfflineProvider ->
+            dieUser seizeRequiresNodeMessage
+        UseBlockfrostProvider _ ->
+            dieUser seizeRequiresNodeMessage
+        UseKupoProvider _ ->
+            dieUser seizeRequiresNodeMessage
+        InvalidNodeProvider ->
+            dieUser "node provider requires both --socket-path and --network-magic"
 
 loadSelectedDeployment :: CliOptions -> ProviderOptions -> IO (Maybe CIP113Deployment)
 loadSelectedDeployment cliOptions commandProviderOptions =
@@ -374,6 +382,14 @@ registerRequiresNodeMessage =
 transferRequiresNodeMessage :: String
 transferRequiresNodeMessage =
     "real transfer transaction building currently requires the node backend"
+
+freezeRequiresNodeMessage :: String
+freezeRequiresNodeMessage =
+    "real freeze transaction building currently requires the node backend"
+
+seizeRequiresNodeMessage :: String
+seizeRequiresNodeMessage =
+    "real seize transaction building currently requires the node backend"
 
 data SelectedProvider
     = UseOfflineProvider

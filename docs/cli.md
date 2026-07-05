@@ -33,11 +33,12 @@ against stdin/`--utxo-file`.
 decoded as a CIP-113 deployment descriptor before the command runs; a
 per-command descriptor overrides a global one.
 
-Real `register --deployment FILE` and `transfer --deployment FILE` transaction
-building is supported only against a local node. Pass `--socket-path`,
-`--network-magic`, and `--change-address` so the command can query live
-registry UTxOs, balance the unsigned transaction, and return change. Offline
-JSON, Blockfrost, and Kupo transfer paths exit with a user error for now.
+Real `register --deployment FILE`, `transfer --deployment FILE`,
+`freeze --deployment FILE`, and `seize --deployment FILE` transaction building
+is supported only against a local node. Pass `--socket-path`, `--network-magic`,
+and `--change-address` so the command can query live registry UTxOs, balance
+the unsigned transaction, and return change. Offline JSON, Blockfrost, and Kupo
+real-build paths exit with a user error for now.
 
 ## register
 
@@ -77,7 +78,9 @@ Lock tokens at an always-fail address (third-party freeze).
 ```bash
 cip113-cli freeze \
   --deployment deployment.json \
-  --utxo-file utxos.json \
+  --socket-path /path/to/node.socket \
+  --network-magic 42 \
+  --change-address <hex-serialized-address> \
   --target-address <addr> \
   --token-name <name> \
   --policy-id <56-char-hex>
@@ -90,7 +93,9 @@ Redirect frozen tokens to a new owner (third-party seize).
 ```bash
 cip113-cli seize \
   --deployment deployment.json \
-  --utxo-file utxos.json \
+  --socket-path /path/to/node.socket \
+  --network-magic 42 \
+  --change-address <hex-serialized-address> \
   --target-address <addr> \
   --to-address <addr> \
   --token-name <name> \
