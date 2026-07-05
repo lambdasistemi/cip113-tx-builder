@@ -40,4 +40,5 @@ nav:
   - Home: index.md
   - CIP-113: cip-113.md
   - CLI usage: cli.md
+  - Tutorial: tutorial.md
   - Contributing: contributing.md

@@ -2,13 +2,13 @@
 
 ## Slice 1 - Tutorial document and navigation
 
-- [ ] T044-S1 Add `docs/tutorial.md` as one continuous walkthrough covering
+- [X] T044-S1 Add `docs/tutorial.md` as one continuous walkthrough covering
       vault seal, register, vault-backed sign/submit, transfer,
       plaintext-key sign/submit, freeze, seize, and final signing.
-- [ ] T044-S1 Use pipe-shaped command blocks that match the `docs/cli.md`
+- [X] T044-S1 Use pipe-shaped command blocks that match the `docs/cli.md`
       stdin/stdout contract and current node-backed deployment flags.
-- [ ] T044-S1 Link the tutorial from `docs/index.md` and `mkdocs.yml`.
-- [ ] T044-S1 Pass the docs-focused check, then commit with the required
+- [X] T044-S1 Link the tutorial from `docs/index.md` and `mkdocs.yml`.
+- [X] T044-S1 Pass the docs-focused check, then commit with the required
       trailer.
 
 ## Slice 2 - Tutorial E2E and drift check

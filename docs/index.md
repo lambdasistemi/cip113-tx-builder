@@ -24,7 +24,9 @@ All three surfaces share the same transaction-building core. The E2E test suite 
 | **Seize** | Redirect tokens to a new owner (third-party redirect) |
 
 Each operation is available from the `cip113-cli` binary — see
-[CLI usage](cli.md) for commands, flags, and the vault seal/sign workflow.
+[CLI usage](cli.md) for commands, flags, and the vault seal/sign workflow, or
+follow the [CIP-113 CLI tutorial](tutorial.md) for a full register, transfer,
+freeze, and seize walkthrough.
 
 ## Quick start
 
@@ -47,4 +49,5 @@ nix build .#cip113-wasm
 
 - [What is CIP-113?](cip-113.md) — the standard, its architecture, and current status
 - [CLI usage](cli.md) — commands, flags, and the vault seal/sign workflow
+- [CIP-113 CLI tutorial](tutorial.md) — one end-to-end local-devnet walkthrough
 - [Contributing](contributing.md) — how this project tracks and implements the spec
