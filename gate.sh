@@ -11,6 +11,7 @@ nix develop --quiet .#docs -c mkdocs build --strict
 
 cip113_cli_out=$(nix build --print-out-paths .#cip113-cli)
 cardano_node_out=$(nix build --print-out-paths .#cardano-node)
-util_linux_out=$(nix build --print-out-paths nixpkgs#util-linux)
+util_linux_out=$(nix build --print-out-paths nixpkgs#util-linux.bin)
+"$util_linux_out/bin/script" --version >/dev/null
 nix build .#e2e-tests
 (cd e2e-test && CIP113_CLI="$cip113_cli_out/bin/cip113-cli" PATH="$util_linux_out/bin:$cardano_node_out/bin:$PATH" ../result/bin/e2e-tests)

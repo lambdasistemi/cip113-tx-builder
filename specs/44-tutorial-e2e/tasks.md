@@ -33,6 +33,15 @@
 - [X] T044-S3 Verify with the exact CI-shaped E2E command and `./gate.sh`, then
       commit with the required trailer.
 
+## Slice 4 - CI util-linux output selection
+
+- [X] T044-S4 Use the single `nixpkgs#util-linux.bin` output for CI and
+      `gate.sh` so `$util_linux/bin` resolves to a real directory.
+- [X] T044-S4 Assert `script` exists in the selected Nix output before running
+      E2E so ambient local PATH cannot mask the failure.
+- [X] T044-S4 Verify with the exact CI-shaped E2E command and `./gate.sh`, then
+      commit with the required trailer.
+
 ## Finalization
 
 - [ ] T044-V1 Update the draft PR body with delivered behavior, drift
