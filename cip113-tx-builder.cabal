@@ -93,10 +93,12 @@ executable cip113-cli
       , bytestring
       , cardano-crypto-class
       , cardano-ledger-api
+      , cardano-ledger-binary
       , cardano-ledger-conway
       , cardano-ledger-core
       , cardano-ledger-mary
       , cardano-node-clients
+      , cardano-tx-tools
       , cardano-wallet-tools
       , cip113-tx-builder
       , containers

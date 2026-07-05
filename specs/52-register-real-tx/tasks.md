@@ -9,11 +9,11 @@
 
 ## Slice 2 - Real register builder output
 
-- [ ] T052-S2 Replace `buildRegisterTxHex` placeholder output with real `registerTx` construction.
-- [ ] T052-S2 Use `findInsertionPoint` to resolve the predecessor from live registry UTxOs.
-- [ ] T052-S2 Construct updated predecessor, new node, and `RegistryInsert` datum/redeemer values from resolved chain state.
-- [ ] T052-S2 Emit real unsigned Conway transaction-body CBOR hex in plain and JSON modes.
-- [ ] T052-S2 Pass the focused register build command and `./gate.sh`, then commit with the required trailer.
+- [X] T052-S2 Replace `buildRegisterTxHex` placeholder output with real `registerTx` construction.
+- [X] T052-S2 Use `findInsertionPoint` to resolve the predecessor from live registry UTxOs.
+- [X] T052-S2 Construct updated predecessor, new node, and `RegistryInsert` datum/redeemer values from resolved chain state.
+- [X] T052-S2 Emit real unsigned Conway transaction-body CBOR hex in plain and JSON modes.
+- [X] T052-S2 Pass the focused register build command and `./gate.sh`, then commit with the required trailer.
 
 ## Slice 3 - CLI e2e smoke and docs
 
