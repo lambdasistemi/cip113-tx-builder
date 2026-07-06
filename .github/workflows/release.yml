@@ -3,11 +3,49 @@ name: Release
 on:
   push:
     branches: [setup]
+    tags: ["v*"]
+  pull_request:
+    branches: [setup]
+    paths:
+      - ".github/workflows/release.yml"
+      - "flake.nix"
+      - "flake.lock"
+      - "nix/**"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Release mode"
+        required: true
+        default: release-please
+        type: choice
+        options:
+          - release-please
+          - release
+          - dev-linux
+      tag:
+        description: "Existing release tag, for example v0.1.0"
+        required: false
+        type: string
+      publish:
+        description: "Upload release assets when mode=release"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/setup') || (github.event_name == 'workflow_dispatch' && inputs.mode == 'release-please') }}
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -18,3 +56,149 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  linux-bundles:
+    name: Build Linux release bundles
+    runs-on: nixos
+    needs: [release-please]
+    if: ${{ always() && (github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.mode != 'release-please') || needs.release-please.outputs.release_created == 'true') }}
+    env:
+      MODE: ${{ (github.event_name == 'pull_request' || inputs.mode == 'dev-linux') && 'dev-linux' || 'release' }}
+      PUBLISH: ${{ (startsWith(github.ref, 'refs/tags/v') || needs.release-please.outputs.release_created == 'true') && 'yes' || inputs.publish || 'no' }}
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || needs.release-please.outputs.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || needs.release-please.outputs.tag_name || inputs.tag || github.ref }}
+
+      - uses: cachix/cachix-action@v17
+        with:
+          name: paolino
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Validate release mode
+        run: |
+          set -euo pipefail
+
+          case "$MODE" in
+            release)
+              case "${TAG:-}" in
+                v*) ;;
+                *)
+                  echo "release mode requires a non-empty v* tag from a tag push, release-please, or the tag input" >&2
+                  exit 1
+                  ;;
+              esac
+              ;;
+            dev-linux)
+              ;;
+            *)
+              echo "unsupported release mode: $MODE" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Build and smoke-test Linux artifacts
+        id: linux-artifacts
+        run: |
+          set -euo pipefail
+
+          case "$MODE" in
+            release)
+              package_output="linux-release-artifacts"
+              artifact_name="linux-release-bundles"
+              ;;
+            dev-linux)
+              package_output="linux-dev-release-artifacts"
+              artifact_name="linux-dev-release-bundles"
+              ;;
+            *)
+              echo "unsupported release mode: $MODE" >&2
+              exit 1
+              ;;
+          esac
+
+          nix build --quiet ".#$package_output"
+          artifact_dir="$(readlink -f result)"
+          export artifact_dir
+
+          nix shell --quiet nixpkgs#dpkg nixpkgs#rpm nixpkgs#cpio --command bash <<'SMOKE'
+          set -euo pipefail
+
+          appimage="$(find "$artifact_dir" -maxdepth 1 -type f -name 'cip113-cli-*-x86_64-linux.AppImage' | sort | head -1)"
+          deb="$(find "$artifact_dir" -maxdepth 1 -type f -name 'cip113-cli-*-x86_64-linux.deb' | sort | head -1)"
+          rpm="$(find "$artifact_dir" -maxdepth 1 -type f -name 'cip113-cli-*-x86_64-linux.rpm' | sort | head -1)"
+
+          test -n "$appimage"
+          test -n "$deb"
+          test -n "$rpm"
+
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "$workdir"' EXIT
+
+          run_help() {
+            local bin="$1"
+            test -x "$bin"
+            env -u SSL_CERT_FILE -u SYSTEM_CERTIFICATE_PATH "$bin" --help >/dev/null
+          }
+
+          find_wrapped_cli() {
+            local root="$1"
+            find "$root" -path '*-with-ca*/bin/cip113-cli' -type f -executable | sort | head -1
+          }
+
+          appimage_dir="$workdir/appimage"
+          mkdir -p "$appimage_dir"
+          appimage_copy="$appimage_dir/cip113-cli.AppImage"
+          cp -L "$appimage" "$appimage_copy"
+          chmod +x "$appimage_copy"
+          (cd "$appimage_dir" && "$appimage_copy" --appimage-extract >/dev/null)
+          appimage_bin="$(find_wrapped_cli "$appimage_dir/squashfs-root")"
+          test -n "$appimage_bin"
+          run_help "$appimage_bin"
+
+          deb_dir="$workdir/deb"
+          mkdir -p "$deb_dir"
+          dpkg-deb -x "$deb" "$deb_dir"
+          deb_bin="$(find_wrapped_cli "$deb_dir")"
+          test -n "$deb_bin"
+          run_help "$deb_bin"
+
+          rpm_dir="$workdir/rpm"
+          mkdir -p "$rpm_dir"
+          (cd "$rpm_dir" && rpm2cpio "$rpm" | cpio -idm >/dev/null)
+          rpm_bin="$(find_wrapped_cli "$rpm_dir")"
+          test -n "$rpm_bin"
+          run_help "$rpm_bin"
+          SMOKE
+
+          rm -rf artifacts
+          mkdir -p artifacts
+          cp -L "$artifact_dir"/* artifacts/
+          ls -lh artifacts/
+
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.linux-artifacts.outputs.artifact_name }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create release and upload artifacts
+        if: env.MODE == 'release' && env.PUBLISH == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          gh=(nix --quiet shell nixpkgs#gh -c gh)
+          "${gh[@]}" release view "$TAG" >/dev/null 2>&1 \
+            || "${gh[@]}" release create "$TAG" \
+              --title "cip113-cli $TAG" \
+              --generate-notes \
+            || "${gh[@]}" release view "$TAG" >/dev/null
+          "${gh[@]}" release upload "$TAG" artifacts/* --clobber
