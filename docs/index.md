@@ -28,6 +28,26 @@ Each operation is available from the `cip113-cli` binary — see
 follow the [CIP-113 CLI tutorial](tutorial.md) for a full register, transfer,
 freeze, and seize walkthrough.
 
+## Install
+
+On macOS, install the CLI with Homebrew:
+
+```bash
+brew tap lambdasistemi/tap && brew install cip113-cli
+```
+
+On Linux, download the AppImage asset from the
+[latest GitHub release](https://github.com/lambdasistemi/cip113-tx-builder/releases/latest):
+
+```bash
+curl -L -o cip113-cli.AppImage <release-asset-url>
+chmod +x cip113-cli.AppImage
+./cip113-cli.AppImage --help
+```
+
+DEB and RPM packages are available as Linux alternatives on the same release
+page when packaged builds are published.
+
 ## Quick start
 
 ```bash

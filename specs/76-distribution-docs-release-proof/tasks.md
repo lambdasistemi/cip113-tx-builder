@@ -2,11 +2,11 @@
 
 ## Slice 1 - Install documentation
 
-- [ ] T7601 Add the macOS Homebrew install command to `README.md`.
-- [ ] T7602 Add Linux AppImage download, `chmod +x`, and `--help` guidance to
+- [X] T7601 Add the macOS Homebrew install command to `README.md`.
+- [X] T7602 Add Linux AppImage download, `chmod +x`, and `--help` guidance to
       `README.md`, with DEB/RPM noted as alternatives.
-- [ ] T7603 Mirror the install guidance in `docs/index.md`.
-- [ ] T7604 Run `./gate.sh` and commit the documentation update with the
+- [X] T7603 Mirror the install guidance in `docs/index.md`.
+- [X] T7604 Run `./gate.sh` and commit the documentation update with the
       required `Tasks:` trailer.
 
 ## Slice 2 - Fresh release proof
