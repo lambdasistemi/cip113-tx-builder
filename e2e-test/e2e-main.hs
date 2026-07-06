@@ -44,6 +44,7 @@ import Cardano.Tx.Build (
  )
 import Cardano.Tx.Diff (decodeConwayTxInput)
 import Control.Concurrent (threadDelay)
+import Control.Exception (bracket)
 import Control.Monad (filterM, unless)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Base16 qualified as Base16
@@ -52,16 +53,25 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.ByteString.Short qualified as SBS
 import Data.List qualified as List
 import Data.Map.Strict qualified as Map
+import Data.Maybe (fromMaybe)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as TE
 import Lens.Micro ((^.))
 import System.Directory (doesFileExist)
-import System.Environment (lookupEnv)
+import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.Exit (ExitCode (..))
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
 import System.Process (readProcessWithExitCode)
-import Test.Hspec (Spec, describe, expectationFailure, hspec, it, shouldBe)
+import Test.Hspec (
+    Spec,
+    describe,
+    expectationFailure,
+    hspec,
+    it,
+    shouldBe,
+    shouldSatisfy,
+ )
 
 import Cardano.CIP113.Address (plgAccountAddress, smartWalletAddr)
 import Cardano.CIP113.E2E.Deploy (
@@ -106,9 +116,40 @@ tutorialSpec =
         it "keeps tutorial command blocks aligned with the E2E templates" $ do
             tutorial <- readTutorial
             extractTutorialCommands tutorial `shouldBe` implementedTutorialCommands
+        it "keeps repeated real-build settings out of tutorial build commands" $ do
+            tutorial <- readTutorial
+            let commands = extractTutorialCommands tutorial
+                buildNames =
+                    [ "register-vault-sign"
+                    , "transfer-plaintext-sign"
+                    , "freeze-plaintext-sign"
+                    , "seize-final-sign"
+                    ]
+                buildBlocks =
+                    [body | (name, body) <- commands, name `elem` buildNames]
+                repeatedFlags =
+                    [ "--deployment"
+                    , "--socket-path"
+                    , "--network-magic"
+                    , "--change-address"
+                    ]
+                offendingFlags =
+                    [ flag
+                    | body <- buildBlocks
+                    , flag <- repeatedFlags
+                    , flag `List.isInfixOf` body
+                    ]
+                environmentBlock =
+                    fromMaybe "" (lookup "environment" commands)
+            offendingFlags `shouldBe` []
+            ("CIP113_CONFIG_FILE" `List.isInfixOf` environmentBlock)
+                `shouldBe` True
         it
             "runs the tutorial command sequence against a local devnet"
             runTutorial
+        it
+            "registers using only a config file and environment variables"
+            runRegisterConfigEnvProof
 
 implementedTutorialCommands :: [(String, String)]
 implementedTutorialCommands =
@@ -123,7 +164,7 @@ implementedTutorialCommands =
     ,
         ( "register-vault-sign"
         , renderBuildSignSubmit
-            (registerArgs "$SOCKET_PATH" "$NETWORK_MAGIC" "$DEPLOYMENT" "$CHANGE_ADDRESS" "$TOKEN_NAME" "$POLICY_ID")
+            (registerArgs "$TOKEN_NAME" "$POLICY_ID")
             (vaultSignArgs "$PAYMENT_VAULT" "$PASSPHRASE_FILE")
             "register"
         )
@@ -131,10 +172,6 @@ implementedTutorialCommands =
         ( "transfer-plaintext-sign"
         , renderBuildSignSubmit
             ( transferArgs
-                "$SOCKET_PATH"
-                "$NETWORK_MAGIC"
-                "$DEPLOYMENT"
-                "$CHANGE_ADDRESS"
                 "$HOLDER_ADDRESS"
                 "$RECIPIENT_ADDRESS"
                 "$TOKEN_NAME"
@@ -146,7 +183,7 @@ implementedTutorialCommands =
     ,
         ( "freeze-plaintext-sign"
         , renderBuildSignSubmit
-            (freezeArgs "$SOCKET_PATH" "$NETWORK_MAGIC" "$DEPLOYMENT" "$CHANGE_ADDRESS" "$RECIPIENT_ADDRESS" "$TOKEN_NAME" "$POLICY_ID")
+            (freezeArgs "$RECIPIENT_ADDRESS" "$TOKEN_NAME" "$POLICY_ID")
             (plaintextSignArgs "$PAYMENT_SKEY")
             "freeze"
         )
@@ -154,10 +191,6 @@ implementedTutorialCommands =
         ( "seize-final-sign"
         , renderBuildSignSubmit
             ( seizeArgs
-                "$SOCKET_PATH"
-                "$NETWORK_MAGIC"
-                "$DEPLOYMENT"
-                "$CHANGE_ADDRESS"
                 "$RECIPIENT_ADDRESS"
                 "$SEIZED_ADDRESS"
                 "$TOKEN_NAME"
@@ -173,10 +206,9 @@ renderEnvironmentCommand =
     List.intercalate
         "\n"
         [ "export CIP113_CLI=./result/bin/cip113-cli"
+        , "export CIP113_CONFIG_FILE=cip113-cli.config.yaml"
         , "export SOCKET_PATH=/path/to/node.socket"
         , "export NETWORK_MAGIC=42"
-        , "export DEPLOYMENT=deployment.json"
-        , "export CHANGE_ADDRESS=<hex-serialized-change-address>"
         , "export PAYMENT_SKEY=payment.skey"
         , "export PAYMENT_VAULT=payment.vault.age"
         , "export PASSPHRASE_FILE=vault.passphrase"
@@ -185,6 +217,12 @@ renderEnvironmentCommand =
         , "export HOLDER_ADDRESS=<current-smart-wallet-address>"
         , "export RECIPIENT_ADDRESS=<recipient-smart-wallet-address>"
         , "export SEIZED_ADDRESS=<seized-token-recipient-address>"
+        , "cat > \"$CIP113_CONFIG_FILE\" <<YAML"
+        , "deployment: deployment.json"
+        , "socket-path: $SOCKET_PATH"
+        , "network-magic: $NETWORK_MAGIC"
+        , "change-address: <hex-serialized-change-address>"
+        , "YAML"
         ]
 
 renderSimpleCommand :: [String] -> String
@@ -249,20 +287,15 @@ runRegisterVaultPhase cip113Cli =
 
         withSystemTempDirectory "cip113-cli-tutorial-register" $ \tmpDir -> do
             files <- writeTutorialFiles tmpDir deployment
+            configFile <- writeCliConfig tmpDir socketPath "42" files
             sealVault cip113Cli files
             unsignedRegisterHex <-
-                runCli
-                    "tutorial register"
-                    cip113Cli
-                    ( registerArgs
-                        socketPath
-                        "42"
-                        (tfDeploymentFile files)
-                        (tfChangeAddressHex files)
-                        (tfTokenName files)
-                        (tfPolicyIdHex files)
-                    )
-                    ""
+                withEnv [("CIP113_CONFIG_FILE", configFile)] $
+                    runCli
+                        "tutorial register"
+                        cip113Cli
+                        (registerArgs (tfTokenName files) (tfPolicyIdHex files))
+                        ""
             signedRegisterHex <-
                 runCli
                     "tutorial register vault sign"
@@ -283,6 +316,7 @@ runTransferFreezeSeizePhase cip113Cli =
 
         withSystemTempDirectory "cip113-cli-tutorial-transfer-freeze-seize" $ \tmpDir -> do
             files <- writeTutorialFiles tmpDir deployment
+            configFile <- writeCliConfig tmpDir socketPath "42" files
             let holderWallet =
                     smartWalletAddr
                         Testnet
@@ -314,20 +348,17 @@ runTransferFreezeSeizePhase cip113Cli =
             threadDelay 5_000_000
 
             unsignedTransferHex <-
-                runCli
-                    "tutorial transfer"
-                    cip113Cli
-                    ( transferArgs
-                        socketPath
-                        "42"
-                        (tfDeploymentFile files)
-                        (tfChangeAddressHex files)
-                        holderWalletHex
-                        recipientWalletHex
-                        (tfTokenName files)
-                        (tfPolicyIdHex files)
-                    )
-                    ""
+                withEnv [("CIP113_CONFIG_FILE", configFile)] $
+                    runCli
+                        "tutorial transfer"
+                        cip113Cli
+                        ( transferArgs
+                            holderWalletHex
+                            recipientWalletHex
+                            (tfTokenName files)
+                            (tfPolicyIdHex files)
+                        )
+                        ""
             decodeAndSubmit
                 submitter
                 "transfer"
@@ -335,19 +366,16 @@ runTransferFreezeSeizePhase cip113Cli =
             threadDelay 5_000_000
 
             unsignedFreezeHex <-
-                runCli
-                    "tutorial freeze"
-                    cip113Cli
-                    ( freezeArgs
-                        socketPath
-                        "42"
-                        (tfDeploymentFile files)
-                        (tfChangeAddressHex files)
-                        recipientWalletHex
-                        (tfTokenName files)
-                        (tfPolicyIdHex files)
-                    )
-                    ""
+                withEnv [("CIP113_CONFIG_FILE", configFile)] $
+                    runCli
+                        "tutorial freeze"
+                        cip113Cli
+                        ( freezeArgs
+                            recipientWalletHex
+                            (tfTokenName files)
+                            (tfPolicyIdHex files)
+                        )
+                        ""
             decodeAndSubmit
                 submitter
                 "freeze"
@@ -355,24 +383,48 @@ runTransferFreezeSeizePhase cip113Cli =
             threadDelay 5_000_000
 
             unsignedSeizeHex <-
-                runCli
-                    "tutorial seize"
-                    cip113Cli
-                    ( seizeArgs
-                        socketPath
-                        "42"
-                        (tfDeploymentFile files)
-                        (tfChangeAddressHex files)
-                        recipientWalletHex
-                        seizedWalletHex
-                        (tfTokenName files)
-                        (tfPolicyIdHex files)
-                    )
-                    ""
+                withEnv [("CIP113_CONFIG_FILE", configFile)] $
+                    runCli
+                        "tutorial seize"
+                        cip113Cli
+                        ( seizeArgs
+                            recipientWalletHex
+                            seizedWalletHex
+                            (tfTokenName files)
+                            (tfPolicyIdHex files)
+                        )
+                        ""
             decodeAndSubmit
                 submitter
                 "seize"
                 =<< signPlaintext cip113Cli files "seize" unsignedSeizeHex
+
+{- | Live proof that @register@ builds a real transaction with the shared
+real-build settings supplied only through a config file and environment
+variables, with no @--deployment@, @--socket-path@, @--network-magic@, or
+@--change-address@ flags on the command line.
+-}
+runRegisterConfigEnvProof :: IO ()
+runRegisterConfigEnvProof = do
+    cip113Cli <- requireCIP113CLI
+    withCIP113DevnetSocket $ \socketPath lsq ltxs -> do
+        let provider = mkN2CProvider lsq
+            submitter = mkN2CSubmitter ltxs
+        pp <- queryProtocolParams provider
+        utxos <- queryUTxOs provider genesisAddr
+        bp <- loadBlueprint "fixtures/cip113-blueprint.json"
+        deployment <- deployCIP113 bp provider submitter pp utxos
+        withSystemTempDirectory "cip113-cli-register-config-env" $ \tmpDir -> do
+            files <- writeTutorialFiles tmpDir deployment
+            configFile <- writeCliConfig tmpDir socketPath "42" files
+            unsignedRegisterHex <-
+                withEnv
+                    [ ("CIP113_CONFIG_FILE", configFile)
+                    , ("CIP113_TOKEN_NAME", tfTokenName files)
+                    , ("CIP113_POLICY_ID", tfPolicyIdHex files)
+                    ]
+                    (runCli "register config-env proof" cip113Cli ["register"] "")
+            unsignedRegisterHex `shouldSatisfy` (not . null)
 
 data TutorialFiles = TutorialFiles
     { tfDeploymentFile :: FilePath
@@ -408,17 +460,43 @@ writeTutorialFiles tmpDir deployment@CIP113Deployment{..} = do
             , tfTokenName = tokenName
             }
 
-registerArgs :: FilePath -> String -> FilePath -> String -> String -> String -> [String]
-registerArgs socketPath networkMagic deploymentFile changeAddress tokenName policyId =
+{- | Write a YAML config file carrying the shared real-build settings so the
+CLI can read @deployment@, @socket-path@, @network-magic@, and
+@change-address@ from configuration instead of per-command flags.
+-}
+writeCliConfig :: FilePath -> FilePath -> String -> TutorialFiles -> IO FilePath
+writeCliConfig tmpDir socketPath networkMagic files = do
+    let configFile = tmpDir </> "cip113-cli.config.yaml"
+        contents =
+            unlines
+                [ "deployment: " <> tfDeploymentFile files
+                , "socket-path: " <> socketPath
+                , "network-magic: " <> networkMagic
+                , "change-address: " <> tfChangeAddressHex files
+                ]
+    writeFile configFile contents
+    pure configFile
+
+{- | Run an action with process environment variables set, restoring each to
+its previous value (or unset) afterwards so later specs are not
+contaminated.
+-}
+withEnv :: [(String, String)] -> IO a -> IO a
+withEnv bindings action =
+    bracket acquire release (const action)
+  where
+    acquire = mapM setBinding bindings
+    setBinding (key, val) = do
+        previous <- lookupEnv key
+        setEnv key val
+        pure (key, previous)
+    release = mapM_ restore
+    restore (key, Nothing) = unsetEnv key
+    restore (key, Just previous) = setEnv key previous
+
+registerArgs :: String -> String -> [String]
+registerArgs tokenName policyId =
     [ "register"
-    , "--deployment"
-    , deploymentFile
-    , "--socket-path"
-    , socketPath
-    , "--network-magic"
-    , networkMagic
-    , "--change-address"
-    , changeAddress
     , "--token-name"
     , tokenName
     , "--policy-id"
@@ -451,17 +529,9 @@ plaintextSignArgs signingKey =
     , signingKey
     ]
 
-transferArgs :: FilePath -> String -> FilePath -> String -> String -> String -> String -> String -> [String]
-transferArgs socketPath networkMagic deploymentFile changeAddress fromAddress toAddress tokenName policyId =
+transferArgs :: String -> String -> String -> String -> [String]
+transferArgs fromAddress toAddress tokenName policyId =
     [ "transfer"
-    , "--deployment"
-    , deploymentFile
-    , "--socket-path"
-    , socketPath
-    , "--network-magic"
-    , networkMagic
-    , "--change-address"
-    , changeAddress
     , "--from-address"
     , fromAddress
     , "--to-address"
@@ -474,17 +544,9 @@ transferArgs socketPath networkMagic deploymentFile changeAddress fromAddress to
     , "1"
     ]
 
-freezeArgs :: FilePath -> String -> FilePath -> String -> String -> String -> String -> [String]
-freezeArgs socketPath networkMagic deploymentFile changeAddress targetAddress tokenName policyId =
+freezeArgs :: String -> String -> String -> [String]
+freezeArgs targetAddress tokenName policyId =
     [ "freeze"
-    , "--deployment"
-    , deploymentFile
-    , "--socket-path"
-    , socketPath
-    , "--network-magic"
-    , networkMagic
-    , "--change-address"
-    , changeAddress
     , "--target-address"
     , targetAddress
     , "--token-name"
@@ -493,17 +555,9 @@ freezeArgs socketPath networkMagic deploymentFile changeAddress targetAddress to
     , policyId
     ]
 
-seizeArgs :: FilePath -> String -> FilePath -> String -> String -> String -> String -> String -> [String]
-seizeArgs socketPath networkMagic deploymentFile changeAddress targetAddress toAddress tokenName policyId =
+seizeArgs :: String -> String -> String -> String -> [String]
+seizeArgs targetAddress toAddress tokenName policyId =
     [ "seize"
-    , "--deployment"
-    , deploymentFile
-    , "--socket-path"
-    , socketPath
-    , "--network-magic"
-    , networkMagic
-    , "--change-address"
-    , changeAddress
     , "--target-address"
     , targetAddress
     , "--to-address"
