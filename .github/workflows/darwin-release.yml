@@ -1,0 +1,112 @@
+name: Darwin Release
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    branches: [setup]
+    paths:
+      - ".github/workflows/darwin-release.yml"
+      - "flake.nix"
+      - "flake.lock"
+      - "nix/**"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Darwin release mode"
+        required: true
+        default: dev-homebrew
+        type: choice
+        options:
+          - release
+          - dev-homebrew
+      tag:
+        description: "Existing release tag, for example v0.1.0"
+        required: false
+        type: string
+      publish:
+        description: "Create or update GitHub release assets when mode=release"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "no"
+          - "yes"
+      update_tap:
+        description: "Push formula updates to lambdasistemi/homebrew-tap"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  darwin-homebrew:
+    name: Build Darwin Homebrew artifacts
+    runs-on: macos-14
+    env:
+      MODE: ${{ github.event_name == 'pull_request' && 'dev-homebrew' || inputs.mode || 'release' }}
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      PUBLISH: ${{ startsWith(github.ref, 'refs/tags/v') && 'yes' || inputs.publish || 'no' }}
+      UPDATE_TAP: ${{ startsWith(github.ref, 'refs/tags/v') && 'yes' || inputs.update_tap || 'no' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag || github.ref }}
+
+      - uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            extra-substituters = https://cache.iog.io https://paolino.cachix.org
+            extra-trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= paolino.cachix.org-1:ecmgO3CXdgSWA2cHlm4srknd/cLFMLmK3i3NrzeDFaE=
+
+      - uses: cachix/cachix-action@v17
+        with:
+          name: paolino
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Create homebrew-tap token
+        if: ${{ github.event_name != 'pull_request' }}
+        id: tap-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: lambdasistemi
+          repositories: homebrew-tap
+
+      - name: Build, test, and publish Darwin Homebrew artifacts
+        uses: paolino/dev-assets/darwin-homebrew-release@6864b20eb75c3578796e7f667562b5aea8780643
+        with:
+          mode: ${{ env.MODE }}
+          tag: ${{ env.TAG }}
+          publish: ${{ env.PUBLISH }}
+          update-tap: ${{ env.UPDATE_TAP }}
+          dev-tag: dev-homebrew
+          release-package: darwin-release-artifacts
+          dev-package: darwin-dev-homebrew-artifacts
+          release-formula: cip113-cli.rb
+          dev-formula: cip113-cli-dev.rb
+          release-artifact-name: darwin-release-bundle
+          dev-artifact-name: darwin-dev-homebrew-artifacts
+          tarball-pattern: cip113-cli-*-aarch64-darwin.tar.gz
+          installed-commands: cip113-cli
+          cleanup-formulae: cip113-cli cip113-cli-dev
+          tap-name: lambdasistemi/tap
+          tap-repository: lambdasistemi/homebrew-tap
+          github-token: ${{ github.token }}
+          tap-token: ${{ steps.tap-token.outputs.token }}
+          release-title: cip113-cli ${{ env.TAG }}
+          dev-release-title: cip113-cli dev Homebrew
+          tarball-smoke-script: cip113-cli --help
+          brew-smoke-script: |
+            cip113-cli --help
+            otool -L "$(which cip113-cli)"
