@@ -2,19 +2,19 @@
 
 ## Slice 1 - Linux release workflow
 
-- [ ] T7401 Preserve the existing release-please job for pushes to `setup`
+- [X] T7401 Preserve the existing release-please job for pushes to `setup`
       and manual release-please dispatch.
-- [ ] T7402 Add tag, PR path-filter, and manual Linux modes to
+- [X] T7402 Add tag, PR path-filter, and manual Linux modes to
       `.github/workflows/release.yml`.
-- [ ] T7403 Build `.#linux-release-artifacts` for release mode and
+- [X] T7403 Build `.#linux-release-artifacts` for release mode and
       `.#linux-dev-release-artifacts` for PR/dev mode.
-- [ ] T7404 Extract AppImage, DEB, and RPM outputs and run extracted
+- [X] T7404 Extract AppImage, DEB, and RPM outputs and run extracted
       `cip113-cli --help` offline for each artifact.
-- [ ] T7405 Upload workflow artifacts for review and attach release
+- [X] T7405 Upload workflow artifacts for review and attach release
       artifacts only when publishing is enabled.
-- [ ] T7406 Pass `./gate.sh` and commit the workflow change with the
+- [X] T7406 Pass `./gate.sh` and commit the workflow change with the
       required `Tasks:` trailer.
-- [ ] T7407 Apply a narrow D0 follow-up fix so the Linux DEB/RPM bundlers do
+- [X] T7407 Apply a narrow D0 follow-up fix so the Linux DEB/RPM bundlers do
       not fail under Ruby 3.3 `fpm` compatibility.
-- [ ] T7408 Verify `./gate.sh` builds and smokes both release and dev Linux
+- [X] T7408 Verify `./gate.sh` builds and smokes both release and dev Linux
       artifact outputs.
