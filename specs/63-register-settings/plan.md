@@ -13,13 +13,20 @@ Owned files:
 
 - `exe/Cardano/CIP113/CLI/Command/Register.hs`
 - `exe/Main.hs`
+- `exe/Cardano/CIP113/CLI/Settings.hs` (Q-002 narrow scope only: add a decoded
+  change-address setting for register; do not otherwise reopen shared settings)
 
 Work:
 
 - Add or keep `Register.parser :: OptEnvConf.Parser Register.Options`.
-- Build the parser from `tokenNameSetting`, `policyIdSetting`, and
-  `optional changeAddressSetting`.
+- Add a decoded-address setting helper in `Settings.hs`, because
+  `changeAddressSetting` is still consumed as `Text` by the queued
+  transfer/freeze/seize bridge parsers.
+- Build the parser from `tokenNameSetting`, `policyIdSetting`, and the decoded
+  optional change-address helper.
 - Remove `optionsUtxoFile` and `optionsRegistryUtxo` from `Register.Options`.
+- Store the decoded change address in `Register.Options` so register no longer
+  carries its own address decoding helpers.
 - Delete the unreachable offline `run`, `runWithProvider`,
   `loadProviderOrExit`, `buildRegisterTxHex`, UTxO-ref parser/formatting, and
   placeholder CBOR helpers.
