@@ -28,17 +28,19 @@ release-please job and adds a Linux bundles job in the same workflow file.
   is opt-in and defaults to `no`.
 - FR5: The Linux job extracts the AppImage, DEB, and RPM artifacts and runs the
   extracted `cip113-cli --help` offline with exit 0 for each package.
+- FR6: The D0 Linux artifact derivation builds successfully under the current
+  pinned Nix inputs for both release and dev artifact outputs.
 
 ## Non-Goals
 
 - Darwin/Homebrew distribution.
 - End-user install documentation.
-- Changing D0 flake outputs or release artifact derivations.
 
 ## Success Criteria
 
 - `actionlint` accepts `.github/workflows/release.yml`.
 - `nix eval` resolves both Linux release artifact package outputs.
-- `nix build .#linux-dev-release-artifacts` succeeds locally or in CI.
+- `nix build .#linux-release-artifacts` and
+  `nix build .#linux-dev-release-artifacts` both succeed locally or in CI.
 - The artifact smoke extracts all three Linux package formats and verifies
   `cip113-cli --help` without requiring a node socket.

@@ -14,3 +14,7 @@
       artifacts only when publishing is enabled.
 - [ ] T7406 Pass `./gate.sh` and commit the workflow change with the
       required `Tasks:` trailer.
+- [ ] T7407 Apply a narrow D0 follow-up fix so the Linux DEB/RPM bundlers do
+      not fail under Ruby 3.3 `fpm` compatibility.
+- [ ] T7408 Verify `./gate.sh` builds and smokes both release and dev Linux
+      artifact outputs.
