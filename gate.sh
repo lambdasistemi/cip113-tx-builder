@@ -40,7 +40,12 @@ e2e_tests=$(nix build .#e2e-tests --no-link --print-out-paths --print-build-logs
 cardano_node=$(nix build .#cardano-node --no-link --print-out-paths --print-build-logs)
 util_linux=$(nix build nixpkgs#util-linux.bin --no-link --print-out-paths --print-build-logs)
 
-TMPDIR="${TMPDIR:-/tmp}" \
+"$util_linux/bin/script" --version >/dev/null
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$register_help" "$tmpdir"' EXIT
+
+cd e2e-test
+TMPDIR="$tmpdir" \
   CIP113_CLI="$cip113_cli/bin/cip113-cli" \
-  PATH="$cardano_node/bin:$util_linux/bin:$PATH" \
+  PATH="$util_linux/bin:$cardano_node/bin:$PATH" \
   "$e2e_tests/bin/e2e-tests"
