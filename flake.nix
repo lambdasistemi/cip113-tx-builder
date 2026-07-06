@@ -33,14 +33,19 @@
     };
     cardano-node.url = "github:IntersectMBO/cardano-node/10.7.0";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    bundlers = {
+      url = "github:NixOS/bundlers";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     ghc-wasm-meta.url =
       "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
+    dev-assets.url = "github:paolino/dev-assets";
     dev-assets-mkdocs.url = "github:paolino/dev-assets?dir=mkdocs";
   };
 
-  outputs = inputs@{ nixpkgs, flake-parts, haskellNix, iohkNix, CHaP, dev-assets-mkdocs, ... }:
+  outputs = inputs@{ self, nixpkgs, flake-parts, haskellNix, iohkNix, CHaP, dev-assets-mkdocs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" ];
+      systems = [ "x86_64-linux" "aarch64-darwin" ];
       perSystem = { system, ... }:
         let
           pkgs = import nixpkgs {
@@ -53,6 +58,18 @@
             inherit system;
           };
           lib = pkgs.lib;
+          packageVersion =
+            let
+              cabalLines =
+                lib.splitString "\n" (builtins.readFile ./cip113-tx-builder.cabal);
+              versionLines =
+                builtins.filter (line: builtins.match "version:.*" line != null) cabalLines;
+              versionMatch =
+                builtins.match "version:[[:space:]]*(.*)" (builtins.head versionLines);
+            in
+            builtins.head versionMatch;
+          sourceRevision = self.shortRev or (self.dirtyShortRev or "dirty");
+          devArtifactVersion = "${packageVersion}-${sourceRevision}";
           lintPkgs = pkgs;
           indexState = "2026-02-17T10:15:41Z";
           indexTool = { index-state = indexState; };
@@ -99,6 +116,13 @@
               packages.cip113-tx-builder.flags.build-e2e-tests = true;
             }
           ];
+          cip113Cli =
+            project.hsPkgs.cip113-tx-builder.components.exes.cip113-cli;
+          cip113CliForBundlers = pkgs.symlinkJoin {
+            name = "cip113-cli-${packageVersion}";
+            paths = [ cip113Cli ];
+            meta.mainProgram = "cip113-cli";
+          };
           cip113Wasm =
             let
               wasmTools = inputs.ghc-wasm-meta.packages.${system};
@@ -114,19 +138,52 @@
               mkdir -p $out
               echo "WASM build placeholder — full FOD pattern TBD in issue #3" > $out/README
             '';
+          linuxReleasePackages = lib.optionalAttrs pkgs.stdenv.isLinux {
+            linux-release-artifacts =
+              import ./nix/linux-release.nix {
+                inherit pkgs system packageVersion;
+                package = cip113CliForBundlers;
+                bundlers = inputs.bundlers;
+              };
+            linux-dev-release-artifacts =
+              import ./nix/linux-release.nix {
+                inherit pkgs system packageVersion;
+                artifactVersion = devArtifactVersion;
+                package = cip113CliForBundlers;
+                bundlers = inputs.bundlers;
+              };
+          };
+          darwinReleasePackages = lib.optionalAttrs pkgs.stdenv.isDarwin {
+            darwin-release-artifacts =
+              import ./nix/darwin-release.nix {
+                inherit inputs pkgs packageVersion;
+                package = cip113CliForBundlers;
+              };
+            darwin-dev-homebrew-artifacts =
+              import ./nix/darwin-release.nix {
+                inherit inputs pkgs packageVersion;
+                artifactVersion = devArtifactVersion;
+                package = cip113CliForBundlers;
+                releaseTag = "dev-homebrew";
+                formulaName = "cip113-cli-dev";
+                formulaClass = "Cip113CliDev";
+                formulaVersion = devArtifactVersion;
+                formulaExtraLines =
+                  "\n  conflicts_with \"cip113-cli\", because: \"both install the same command-line tools\"";
+              };
+          };
         in
         {
           packages = {
             cip113-tx-builder =
               project.hsPkgs.cip113-tx-builder.components.library;
-            cip113-cli =
-              project.hsPkgs.cip113-tx-builder.components.exes.cip113-cli;
+            cip113-cli = cip113Cli;
             e2e-tests =
               project.hsPkgs.cip113-tx-builder.components.tests.e2e-tests;
             cardano-node =
               inputs.cardano-node.packages.${system}.cardano-node;
             cip113-wasm = cip113Wasm;
-          };
+          } // linuxReleasePackages // darwinReleasePackages;
           devShells.default = project.shell;
           devShells.docs = pkgs.mkShell {
             inputsFrom = [ dev-assets-mkdocs.devShells.${system}.default ];
