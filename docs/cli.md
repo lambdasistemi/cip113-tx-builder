@@ -11,59 +11,92 @@ nix build .#cip113-cli
 
 Exit codes: `0` success, `1` user error, `2` internal/unimplemented error.
 
-## UTxO sources
+## Settings: flags, environment variables, and config keys
 
-`register`, `transfer`, `freeze`, and `seize` read their inputs from one of
-four interchangeable sources, selected by which flags are passed:
+Every build setting can be supplied three interchangeable ways, resolved in
+priority order:
 
-| Source | Flags |
-|---|---|
-| Offline JSON | `--utxo-file FILE` (a `cardano-cli query utxo --out-file` document) |
-| Local node | `--socket-path PATH --network-magic MAGIC` |
-| Blockfrost | `--blockfrost-project-id ID` |
-| Kupo | `--kupo-url URL` |
+1. a command-line flag,
+2. a `CIP113_*` environment variable,
+3. a key in a YAML configuration file.
 
-Provider flags can be given once before the subcommand (apply to any
-subcommand that follows) or repeated after it — a per-command flag overrides
-the global one. With no provider flags at all, the offline backend is used
-against stdin/`--utxo-file`.
+The configuration file is selected by `--config-file FILE` or the
+`CIP113_CONFIG_FILE` environment variable; with neither set, the default XDG
+path `~/.config/cip113-cli/config.yaml` is used when it exists.
 
-`register`, `transfer`, `freeze`, and `seize` also accept a shared
-`--deployment FILE` flag in the same positions as provider flags. The file is
-decoded as a CIP-113 deployment descriptor before the command runs; a
-per-command descriptor overrides a global one.
+```bash
+cip113-cli --config-file ./cip113-cli.config.yaml register ...
+CIP113_CONFIG_FILE=./cip113-cli.config.yaml cip113-cli register ...
+```
 
-Real `register --deployment FILE`, `transfer --deployment FILE`,
-`freeze --deployment FILE`, and `seize --deployment FILE` transaction building
-is supported only against a local node. Pass `--socket-path`, `--network-magic`,
-and `--change-address` so the command can query live registry UTxOs, balance
-the unsigned transaction, and return change. Offline JSON, Blockfrost, and Kupo
-real-build paths exit with a user error for now.
+Collecting the shared real-build settings in a config file lets the register,
+transfer, freeze, and seize commands run without repeating `--deployment`,
+`--socket-path`, `--network-magic`, and `--change-address` on every
+invocation:
+
+```yaml
+deployment: deployment.json
+socket-path: /path/to/node.socket
+network-magic: 42
+change-address: <hex-serialized-address>
+```
+
+## Real transaction building
+
+`register`, `transfer`, `freeze`, and `seize` build real transactions only
+against a local Cardano node. Each command queries live registry UTxOs,
+balances the unsigned transaction, and returns change, so it needs a deployment
+descriptor, a node connection, and a funding/change address. There is no
+offline-JSON, Blockfrost, or Kupo real-build path.
+
+### Shared real-build settings
+
+These four settings are common to all four commands and are the ones best moved
+into a config file or environment.
+
+| Setting | Flag | Environment variable | Config key |
+|---|---|---|---|
+| Deployment descriptor JSON | `--deployment FILE` | `CIP113_DEPLOYMENT` | `deployment` |
+| Node socket path | `--socket-path PATH` | `CIP113_SOCKET_PATH` | `socket-path` |
+| Network magic | `--network-magic INT` | `CIP113_NETWORK_MAGIC` | `network-magic` |
+| Funding and change address | `--change-address ADDR` | `CIP113_CHANGE_ADDRESS` | `change-address` |
 
 ## register
 
-Register a CIP-113 policy.
+Register a CIP-113 policy. In addition to the shared real-build settings,
+`register` takes:
+
+| Setting | Flag | Environment variable | Config key |
+|---|---|---|---|
+| Token name | `--token-name NAME` | `CIP113_TOKEN_NAME` | `token-name` |
+| Policy id (56-char hex) | `--policy-id HEX` | `CIP113_POLICY_ID` | `policy-id` |
+
+With the shared settings provided through `CIP113_CONFIG_FILE`, register reduces
+to its command-specific flags:
 
 ```bash
-cip113-cli register \
-  --deployment deployment.json \
-  --socket-path /path/to/node.socket \
-  --network-magic 42 \
-  --change-address <hex-serialized-address> \
+CIP113_CONFIG_FILE=cip113-cli.config.yaml \
+  cip113-cli register \
   --token-name <name> \
   --policy-id <56-char-hex>
 ```
 
 ## transfer
 
-Move CIP-113 tokens between smart wallet addresses.
+Move CIP-113 tokens between smart wallet addresses. In addition to the shared
+real-build settings, `transfer` takes:
+
+| Setting | Flag | Environment variable | Config key |
+|---|---|---|---|
+| Sender address | `--from-address ADDR` | `CIP113_FROM_ADDRESS` | `from-address` |
+| Recipient address | `--to-address ADDR` | `CIP113_TO_ADDRESS` | `to-address` |
+| Token name | `--token-name NAME` | `CIP113_TOKEN_NAME` | `token-name` |
+| Policy id (56-char hex) | `--policy-id HEX` | `CIP113_POLICY_ID` | `policy-id` |
+| Positive token amount | `--amount INT` | `CIP113_AMOUNT` | `amount` |
 
 ```bash
-cip113-cli transfer \
-  --deployment deployment.json \
-  --socket-path /path/to/node.socket \
-  --network-magic 42 \
-  --change-address <hex-serialized-address> \
+CIP113_CONFIG_FILE=cip113-cli.config.yaml \
+  cip113-cli transfer \
   --from-address <addr> \
   --to-address <addr> \
   --token-name <name> \
@@ -73,14 +106,18 @@ cip113-cli transfer \
 
 ## freeze
 
-Lock tokens at an always-fail address (third-party freeze).
+Lock tokens at an always-fail address (third-party freeze). In addition to the
+shared real-build settings, `freeze` takes:
+
+| Setting | Flag | Environment variable | Config key |
+|---|---|---|---|
+| Target address | `--target-address ADDR` | `CIP113_TARGET_ADDRESS` | `target-address` |
+| Token name | `--token-name NAME` | `CIP113_TOKEN_NAME` | `token-name` |
+| Policy id (56-char hex) | `--policy-id HEX` | `CIP113_POLICY_ID` | `policy-id` |
 
 ```bash
-cip113-cli freeze \
-  --deployment deployment.json \
-  --socket-path /path/to/node.socket \
-  --network-magic 42 \
-  --change-address <hex-serialized-address> \
+CIP113_CONFIG_FILE=cip113-cli.config.yaml \
+  cip113-cli freeze \
   --target-address <addr> \
   --token-name <name> \
   --policy-id <56-char-hex>
@@ -88,14 +125,19 @@ cip113-cli freeze \
 
 ## seize
 
-Redirect frozen tokens to a new owner (third-party seize).
+Redirect frozen tokens to a new owner (third-party seize). In addition to the
+shared real-build settings, `seize` takes:
+
+| Setting | Flag | Environment variable | Config key |
+|---|---|---|---|
+| Target address | `--target-address ADDR` | `CIP113_TARGET_ADDRESS` | `target-address` |
+| Destination address | `--to-address ADDR` | `CIP113_TO_ADDRESS` | `to-address` |
+| Token name | `--token-name NAME` | `CIP113_TOKEN_NAME` | `token-name` |
+| Policy id (56-char hex) | `--policy-id HEX` | `CIP113_POLICY_ID` | `policy-id` |
 
 ```bash
-cip113-cli seize \
-  --deployment deployment.json \
-  --socket-path /path/to/node.socket \
-  --network-magic 42 \
-  --change-address <hex-serialized-address> \
+CIP113_CONFIG_FILE=cip113-cli.config.yaml \
+  cip113-cli seize \
   --target-address <addr> \
   --to-address <addr> \
   --token-name <name> \
@@ -119,8 +161,8 @@ from `cardano-wallet-tools`, so it composes directly with any of the
 transaction-building subcommands above:
 
 ```bash
-cip113-cli register --utxo-file utxos.json --registry-utxo ... \
-  --token-name ... --policy-id ... \
+CIP113_CONFIG_FILE=cip113-cli.config.yaml \
+  cip113-cli register --token-name ... --policy-id ... \
   | cip113-cli sign --signing-key payment.skey \
   > registered.signed.cbor
 ```
@@ -136,5 +178,5 @@ cip113-cli sign --signing-key payment.skey
 cip113-cli sign --signing-key-vault payment.vault.age [--passphrase-file FILE]
 ```
 
-`sign` never generates keys and never manages the offline/node/indexer
-providers above — it delegates all key handling to `cardano-wallet-tools`.
+`sign` never generates keys and never manages the node connection above — it
+delegates all key handling to `cardano-wallet-tools`.
