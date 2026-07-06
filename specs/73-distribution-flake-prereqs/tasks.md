@@ -15,5 +15,5 @@
 
 ## Slice 2 - finalization
 
-- [ ] T7307 Re-run `./gate.sh` at HEAD and update PR verification metadata.
-- [ ] T7308 Drop `gate.sh` and mark the PR ready.
+- [X] T7307 Re-run `./gate.sh` at HEAD and update PR verification metadata.
+- [X] T7308 Drop `gate.sh` and mark the PR ready.
