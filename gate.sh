@@ -67,9 +67,10 @@ smoke_linux_artifacts() {
 }
 
 git diff --check
-nix eval --raw .#packages.x86_64-linux.linux-release-artifacts.name >/dev/null
-nix eval --raw .#packages.x86_64-linux.linux-dev-release-artifacts.name >/dev/null
 nix run --quiet nixpkgs#actionlint -- .github/workflows/release.yml
 
-artifact_dir="$(nix build --quiet .#linux-dev-release-artifacts --no-link --print-out-paths)"
-nix shell --quiet nixpkgs#dpkg nixpkgs#rpm nixpkgs#cpio --command bash -c "$(declare -f smoke_linux_artifacts); smoke_linux_artifacts \"\$1\"" bash "$artifact_dir"
+release_artifact_dir="$(nix build --quiet .#linux-release-artifacts --no-link --print-out-paths)"
+dev_artifact_dir="$(nix build --quiet .#linux-dev-release-artifacts --no-link --print-out-paths)"
+
+nix shell --quiet nixpkgs#dpkg nixpkgs#rpm nixpkgs#cpio --command bash -c "$(declare -f smoke_linux_artifacts); smoke_linux_artifacts \"\$1\"" bash "$release_artifact_dir"
+nix shell --quiet nixpkgs#dpkg nixpkgs#rpm nixpkgs#cpio --command bash -c "$(declare -f smoke_linux_artifacts); smoke_linux_artifacts \"\$1\"" bash "$dev_artifact_dir"
