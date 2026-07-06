@@ -11,6 +11,6 @@
 
 ## Slice 2 - finalization
 
-- [ ] T6307 Re-run the final gate at HEAD and capture help evidence.
-- [ ] T6308 Update the PR body and drop `gate.sh`.
-- [ ] T6309 Write the merge-review Q-file for the epic owner.
+- [X] T6307 Re-run the final gate at HEAD and capture help evidence.
+- [X] T6308 Update the PR body and drop `gate.sh`.
+- [X] T6309 Write the merge-review Q-file for the epic owner.
