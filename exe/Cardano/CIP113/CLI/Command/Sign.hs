@@ -12,20 +12,29 @@ import Cardano.Ledger.Hashes (EraIndependentTxBody, HASH, extractHash, hashAnnot
 import Cardano.Tx.Ledger (ConwayTx)
 import Cardano.Tx.Sign.AttachWitness qualified as Structured
 import Cardano.Wallet.Tools.Cli.Vault (
-    SigningKeySource,
+    PassphraseSource (..),
+    SigningKeySource (..),
     loadSignerFromSource,
-    signingKeySourceParser,
  )
 import Cardano.Wallet.Tools.Sign (
     TxBodyBytes (..),
  )
 import Cardano.Wallet.Tools.Sign qualified as WalletSign
+import Control.Applicative ((<|>))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Base16 qualified as B16
 import Data.Set qualified as Set
 import Lens.Micro ((^.))
-import Options.Applicative (Parser)
+import OptEnvConf (
+    Parser,
+    help,
+    metavar,
+    name,
+    reader,
+    setting,
+    str,
+ )
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 
@@ -35,7 +44,42 @@ newtype Options = Options
 
 parser :: Parser Options
 parser =
-    Options <$> signingKeySourceParser
+    Options
+        <$> ( plaintextKeyParser
+                <|> vaultKeyParser
+            )
+
+plaintextKeyParser :: Parser SigningKeySource
+plaintextKeyParser =
+    PlaintextKey
+        <$> setting
+            [ name "signing-key"
+            , reader str
+            , metavar "FILE"
+            , help "Plaintext signing key file"
+            ]
+
+vaultKeyParser :: Parser SigningKeySource
+vaultKeyParser =
+    VaultKey
+        <$> setting
+            [ name "signing-key-vault"
+            , reader str
+            , metavar "FILE"
+            , help "Age-encrypted signing key vault"
+            ]
+        <*> passphraseSourceParser
+
+passphraseSourceParser :: Parser PassphraseSource
+passphraseSourceParser =
+    PassphraseFile
+        <$> setting
+            [ name "passphrase-file"
+            , reader str
+            , metavar "FILE"
+            , help "File containing the vault passphrase"
+            ]
+        <|> pure InteractivePassphrase
 
 run :: Options -> IO ()
 run options = do

@@ -7,11 +7,11 @@
 
 ## Slice 2 - parser foundation
 
-- [ ] T6203 Add `Cardano.CIP113.CLI.Settings` with deployment, node connection, change address, token name, and policy id settings.
-- [ ] T6204 Register the new module in `cip113-tx-builder.cabal`.
-- [ ] T6205 Rewrite `Main.hs` on `opt-env-conf` commands/config-file wiring and remove `ProviderOptions` manual merging.
-- [ ] T6206 Convert `sign` and `vault seal` onto the new parser stack without changing runtime behavior.
-- [ ] T6207 Verify help output exposes CLI flag, env var, and config key information.
+- [X] T6203 Add `Cardano.CIP113.CLI.Settings` with deployment, node connection, change address, token name, and policy id settings.
+- [X] T6204 Register the new module in `cip113-tx-builder.cabal`.
+- [X] T6205 Rewrite `Main.hs` on `opt-env-conf` commands/config-file wiring and remove `ProviderOptions` manual merging.
+- [X] T6206 Convert `sign` and `vault seal` onto the new parser stack without changing runtime behavior.
+- [X] T6207 Verify help output exposes CLI flag, env var, and config key information.
 
 ## Slice 3 - finalization
 

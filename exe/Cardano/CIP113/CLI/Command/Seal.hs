@@ -14,12 +14,14 @@ import Cardano.Wallet.Tools.Vault (
 import Control.Monad (when)
 import Data.ByteString qualified as BS
 import Data.Text qualified as Text
-import Options.Applicative (
+import OptEnvConf (
     Parser,
     help,
-    long,
     metavar,
-    strOption,
+    name,
+    reader,
+    setting,
+    str,
  )
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
@@ -33,16 +35,18 @@ data Options = Options
 parser :: Parser Options
 parser =
     Options
-        <$> strOption
-            ( long "signing-key"
-                <> metavar "FILE"
-                <> help "Plaintext .skey TextEnvelope to encrypt"
-            )
-        <*> strOption
-            ( long "out"
-                <> metavar "FILE"
-                <> help "Output .age vault file"
-            )
+        <$> setting
+            [ name "signing-key"
+            , reader str
+            , metavar "FILE"
+            , help "Plaintext .skey TextEnvelope to encrypt"
+            ]
+        <*> setting
+            [ name "out"
+            , reader str
+            , metavar "FILE"
+            , help "Output .age vault file"
+            ]
 
 run :: Options -> IO ()
 run options = do

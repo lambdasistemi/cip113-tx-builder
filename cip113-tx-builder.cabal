@@ -84,6 +84,8 @@ executable cip113-cli
         Cardano.CIP113.CLI.Provider.Kupo
         Cardano.CIP113.CLI.Provider.Node
         Cardano.CIP113.CLI.Provider.Offline
+        Cardano.CIP113.CLI.Settings
+        Paths_cip113_tx_builder
 
     build-depends:
         aeson                  >= 2.2  && < 2.3
