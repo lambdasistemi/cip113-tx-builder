@@ -13,6 +13,6 @@
 
 ## Slice 2 - finalization
 
-- [ ] T6609 Re-run the final gate at HEAD and capture root/register help output.
-- [ ] T6610 Update the PR body and drop `gate.sh`.
-- [ ] T6611 Write the merge-review Q-file for the epic owner.
+- [x] T6609 Re-run the final gate at HEAD and capture root/register help output.
+- [x] T6610 Update the PR body and drop `gate.sh`.
+- [x] T6611 Write the merge-review Q-file for the epic owner.
