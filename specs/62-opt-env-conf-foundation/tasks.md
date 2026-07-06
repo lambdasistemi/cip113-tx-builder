@@ -15,6 +15,6 @@
 
 ## Slice 3 - finalization
 
-- [ ] T6208 Run fourmolu, hlint, `nix build .#e2e-tests`, and the CI-shaped e2e invocation.
-- [ ] T6209 Update the PR body with help-output evidence and verification results.
-- [ ] T6210 Write a merge-review Q-file for the epic owner instead of self-merging.
+- [X] T6208 Run fourmolu, hlint, `nix build .#e2e-tests`, and the CI-shaped e2e invocation.
+- [X] T6209 Update the PR body with help-output evidence and verification results.
+- [X] T6210 Write a merge-review Q-file for the epic owner instead of self-merging.
