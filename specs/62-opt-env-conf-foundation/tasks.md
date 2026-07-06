@@ -2,8 +2,8 @@
 
 ## Slice 1 - dependency probe
 
-- [ ] T6201 Add `opt-env-conf` to the `cip113-cli` executable dependencies.
-- [ ] T6202 Verify `nix build .#cip113-cli --no-link --print-build-logs` resolves under the pinned Nix package set.
+- [X] T6201 Add `opt-env-conf` to the `cip113-cli` executable dependencies.
+- [X] T6202 Verify `nix build .#cip113-cli --no-link --print-build-logs` resolves under the pinned Nix package set.
 
 ## Slice 2 - parser foundation
 

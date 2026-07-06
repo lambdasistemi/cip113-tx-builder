@@ -107,6 +107,7 @@ executable cip113-cli
       , http-client-tls
       , http-types
       , microlens
+      , opt-env-conf
       , optparse-applicative   >= 0.18 && < 0.20
       , ouroboros-network:api
       , text
