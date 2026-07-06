@@ -20,7 +20,6 @@ import Cardano.CIP113.CLI.Settings (
     positiveAmountSetting,
     tokenNameSetting,
     utxoFileSetting,
-    utxoRefSetting,
  )
 import Cardano.CIP113.Deployment (CIP113Deployment)
 import Cardano.Node.Client.N2C.Connection (
@@ -101,7 +100,7 @@ commandParser :: Parser Command
 commandParser =
     commands
         [ command "register" "Register a CIP-113 policy" $
-            Register <$> realTxSettingsParser <*> registerOptionsParser
+            Register <$> realTxSettingsParser <*> Register.parser
         , command "transfer" "Transfer CIP-113 tokens" $
             Transfer <$> realTxSettingsParser <*> transferOptionsParser
         , command "freeze" "Freeze CIP-113 tokens" $
@@ -129,15 +128,6 @@ realTxSettingsParser =
     RealTxSettings
         <$> deploymentSetting
         <*> nodeConnectionSetting
-
-registerOptionsParser :: Parser Register.Options
-registerOptionsParser =
-    Register.Options
-        <$> utxoFileSetting
-        <*> utxoRefSetting
-        <*> tokenNameSetting
-        <*> policyIdSetting
-        <*> optional changeAddressSetting
 
 transferOptionsParser :: Parser Transfer.Options
 transferOptionsParser =

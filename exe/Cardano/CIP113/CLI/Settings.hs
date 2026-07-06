@@ -11,6 +11,7 @@ YAML configuration keys used by @cip113-cli@.
 -}
 module Cardano.CIP113.CLI.Settings (
     addressTextSetting,
+    changeAddressAddrSetting,
     changeAddressSetting,
     deploymentSetting,
     nodeConnectionSetting,
@@ -81,6 +82,17 @@ nodeConnectionSetting =
 changeAddressSetting :: Parser Text
 changeAddressSetting =
     checkMapEither parseAddressArgument $
+        setting
+            [ name "change-address"
+            , reader str
+            , metavar "ADDR"
+            , help "Funding and change address for real node transaction builds"
+            ]
+
+-- | Decoded funding and change address for node-backed transaction builds.
+changeAddressAddrSetting :: Parser Addr
+changeAddressAddrSetting =
+    checkMapEither parseCardanoAddress $
         setting
             [ name "change-address"
             , reader str
