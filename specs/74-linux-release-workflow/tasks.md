@@ -1,0 +1,16 @@
+# Issue 74 Tasks
+
+## Slice 1 - Linux release workflow
+
+- [ ] T7401 Preserve the existing release-please job for pushes to `setup`
+      and manual release-please dispatch.
+- [ ] T7402 Add tag, PR path-filter, and manual Linux modes to
+      `.github/workflows/release.yml`.
+- [ ] T7403 Build `.#linux-release-artifacts` for release mode and
+      `.#linux-dev-release-artifacts` for PR/dev mode.
+- [ ] T7404 Extract AppImage, DEB, and RPM outputs and run extracted
+      `cip113-cli --help` offline for each artifact.
+- [ ] T7405 Upload workflow artifacts for review and attach release
+      artifacts only when publishing is enabled.
+- [ ] T7406 Pass `./gate.sh` and commit the workflow change with the
+      required `Tasks:` trailer.
