@@ -12,13 +12,8 @@ import Cardano.CIP113.CLI.Provider.Node (
     NodeProviderConfig (..),
  )
 import Cardano.CIP113.CLI.Settings (
-    addressTextSetting,
-    changeAddressSetting,
     deploymentSetting,
     nodeConnectionSetting,
-    policyIdSetting,
-    tokenNameSetting,
-    utxoFileSetting,
  )
 import Cardano.CIP113.Deployment (CIP113Deployment)
 import Cardano.Node.Client.N2C.Connection (
@@ -28,7 +23,6 @@ import Cardano.Node.Client.N2C.Connection (
  )
 import Cardano.Node.Client.N2C.Provider (mkN2CProvider)
 import Cardano.Node.Client.Provider qualified as Node
-import Control.Applicative (optional)
 import Control.Concurrent.Async (withAsync)
 import Control.Monad (void)
 import OptEnvConf (
@@ -103,9 +97,9 @@ commandParser =
         , command "transfer" "Transfer CIP-113 tokens" $
             Transfer <$> realTxSettingsParser <*> Transfer.parser
         , command "freeze" "Freeze CIP-113 tokens" $
-            Freeze <$> realTxSettingsParser <*> freezeOptionsParser
+            Freeze <$> realTxSettingsParser <*> Freeze.parser
         , command "seize" "Seize CIP-113 tokens" $
-            Seize <$> realTxSettingsParser <*> seizeOptionsParser
+            Seize <$> realTxSettingsParser <*> Seize.parser
         , command "sign" signHelp $
             Sign <$> Sign.parser
         , command "vault" "Manage age-encrypted signing key vaults" vaultParser
@@ -127,25 +121,6 @@ realTxSettingsParser =
     RealTxSettings
         <$> deploymentSetting
         <*> nodeConnectionSetting
-
-freezeOptionsParser :: Parser Freeze.Options
-freezeOptionsParser =
-    Freeze.Options
-        <$> utxoFileSetting
-        <*> addressTextSetting "target-address" "Target address"
-        <*> tokenNameSetting
-        <*> policyIdSetting
-        <*> optional changeAddressSetting
-
-seizeOptionsParser :: Parser Seize.Options
-seizeOptionsParser =
-    Seize.Options
-        <$> utxoFileSetting
-        <*> addressTextSetting "target-address" "Target address"
-        <*> addressTextSetting "to-address" "Destination address"
-        <*> tokenNameSetting
-        <*> policyIdSetting
-        <*> optional changeAddressSetting
 
 runCli :: CliOptions -> IO ()
 runCli CliOptions{cliJson, cliCommand} =
