@@ -10,6 +10,7 @@ Reusable settings for command-line options, environment variables, and
 YAML configuration keys used by @cip113-cli@.
 -}
 module Cardano.CIP113.CLI.Settings (
+    addressAddrSetting,
     addressTextSetting,
     changeAddressAddrSetting,
     changeAddressSetting,
@@ -104,6 +105,17 @@ changeAddressAddrSetting =
 addressTextSetting :: String -> String -> Parser Text
 addressTextSetting settingName settingHelp =
     checkMapEither parseAddressArgument $
+        setting
+            [ name settingName
+            , reader str
+            , metavar "ADDR"
+            , help settingHelp
+            ]
+
+-- | Decoded address setting.
+addressAddrSetting :: String -> String -> Parser Addr
+addressAddrSetting settingName settingHelp =
+    checkMapEither parseCardanoAddress $
         setting
             [ name settingName
             , reader str

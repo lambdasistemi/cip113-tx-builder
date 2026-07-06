@@ -17,7 +17,6 @@ import Cardano.CIP113.CLI.Settings (
     deploymentSetting,
     nodeConnectionSetting,
     policyIdSetting,
-    positiveAmountSetting,
     tokenNameSetting,
     utxoFileSetting,
  )
@@ -102,7 +101,7 @@ commandParser =
         [ command "register" "Register a CIP-113 policy" $
             Register <$> realTxSettingsParser <*> Register.parser
         , command "transfer" "Transfer CIP-113 tokens" $
-            Transfer <$> realTxSettingsParser <*> transferOptionsParser
+            Transfer <$> realTxSettingsParser <*> Transfer.parser
         , command "freeze" "Freeze CIP-113 tokens" $
             Freeze <$> realTxSettingsParser <*> freezeOptionsParser
         , command "seize" "Seize CIP-113 tokens" $
@@ -128,17 +127,6 @@ realTxSettingsParser =
     RealTxSettings
         <$> deploymentSetting
         <*> nodeConnectionSetting
-
-transferOptionsParser :: Parser Transfer.Options
-transferOptionsParser =
-    Transfer.Options
-        <$> utxoFileSetting
-        <*> addressTextSetting "from-address" "Sender address"
-        <*> addressTextSetting "to-address" "Recipient address"
-        <*> tokenNameSetting
-        <*> policyIdSetting
-        <*> positiveAmountSetting
-        <*> optional changeAddressSetting
 
 freezeOptionsParser :: Parser Freeze.Options
 freezeOptionsParser =

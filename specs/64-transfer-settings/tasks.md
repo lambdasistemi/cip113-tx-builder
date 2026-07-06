@@ -2,12 +2,12 @@
 
 ## Slice 1 - transfer parser relocation
 
-- [ ] T6401 Move transfer option parsing into `Transfer.hs` using shared settings builders.
-- [ ] T6402 Remove `--utxo-file` from `Transfer.Options` and `transfer --help`.
-- [ ] T6403 Delete unreachable offline placeholder transfer code and duplicated parser/validation helpers from `Transfer.hs`.
-- [ ] T6404 Wire `Main.hs` to `Transfer.parser` without touching freeze/seize bridge parsers.
-- [ ] T6405 Prove the help output keeps the remaining transfer flag/env/config settings.
-- [ ] T6406 Run `./gate.sh` successfully.
+- [X] T6401 Move transfer option parsing into `Transfer.hs` using shared settings builders.
+- [X] T6402 Remove `--utxo-file` from `Transfer.Options` and `transfer --help`.
+- [X] T6403 Delete unreachable offline placeholder transfer code and duplicated parser/validation helpers from `Transfer.hs`.
+- [X] T6404 Wire `Main.hs` to `Transfer.parser` without touching freeze/seize bridge parsers.
+- [X] T6405 Prove the help output keeps the remaining transfer flag/env/config settings.
+- [X] T6406 Run `./gate.sh` successfully.
 
 ## Slice 2 - finalization
 
