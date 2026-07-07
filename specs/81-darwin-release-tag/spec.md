@@ -35,6 +35,8 @@ tag, but the release-check-command pattern does fit.
   the URL resolves.
 - **FR-005**: The existing PR/dev Homebrew path must continue to use
   `dev-homebrew` and may continue to rewrite formula URLs for local-tap tests.
+- **FR-006**: CI must not enforce equality between the Cabal artifact version
+  and the release-please public release tag.
 
 ## Success Criteria
 
@@ -46,6 +48,8 @@ tag, but the release-check-command pattern does fit.
 - `scripts/release/check-darwin-release-tag v0.1.2 --resolve-url` exits 0
   against the live release asset.
 - `./gate.sh` passes after the issue-specific proof is added.
+- The ordinary PR `CI / build` workflow does not fail solely because Cabal and
+  release-please versions differ.
 
 ## Non-Goals
 

@@ -42,7 +42,18 @@ public tag is the Cabal version. For this repo, release-please's
 - PR gate after extension: `./gate.sh`, including workflow lint, Darwin package
   eval, and the release URL proof.
 
+## CI Follow-Up
+
+After slice 1 reached PR CI, `CI / build` failed in the
+`Cabal version matches manifest` step because it still enforced the stale
+invariant `cabal == release-please-manifest + ".0"`. That check contradicts the
+issue #81 premise: Cabal artifact versions and release-please public release
+tags are separate versioning schemes in this repo. The correction is to keep
+the workflow reporting both versions, but stop failing on their difference.
+
 ## Slice Breakdown
 
-One implementation slice is enough: the Nix call site, release checker, and
-workflow hook form one release-mode contract and must land together.
+- Slice 1: The Nix call site, release checker, and Darwin workflow hook form one
+  release-mode contract and must land together.
+- Slice 2: Relax the ordinary CI version check so it reports Cabal and
+  release-please versions without enforcing equality.
