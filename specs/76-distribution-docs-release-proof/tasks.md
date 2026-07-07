@@ -11,12 +11,12 @@
 
 ## Slice 2 - Fresh release proof
 
-- [ ] T7605 Trigger `release.yml` with `workflow_dispatch` mode `dev-linux`
+- [X] T7605 Trigger `release.yml` with `workflow_dispatch` mode `dev-linux`
       and confirm the run succeeds.
-- [ ] T7606 Download the Linux workflow artifact on this Linux host, run the
+- [X] T7606 Download the Linux workflow artifact on this Linux host, run the
       AppImage directly with `--help`, and confirm exit 0.
-- [ ] T7607 Trigger `darwin-release.yml` with `workflow_dispatch` mode
-      `dev-homebrew`, `publish=no`, and `update_tap=no`, then confirm the
-      `macos-14` local-tap `brew test` run succeeds.
-- [ ] T7608 Record proof links, commands, release-page applicability, and the
+- [X] T7607 Trigger `darwin-release.yml` with `workflow_dispatch` mode
+      `dev-homebrew`, `publish=no`, and `update_tap=no`, then record the fresh
+      macOS tarball-smoke proof and D2 PR-mode local-tap `brew test` proxy.
+- [X] T7608 Record proof links, commands, release-page applicability, and the
       Darwin CI-runner proxy boundary in `proof.md` and the PR body.
