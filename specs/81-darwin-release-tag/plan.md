@@ -51,9 +51,23 @@ issue #81 premise: Cabal artifact versions and release-please public release
 tags are separate versioning schemes in this repo. The correction is to keep
 the workflow reporting both versions, but stop failing on their difference.
 
+## Darwin PR-Mode Follow-Up
+
+After the CI correction, the Darwin PR-mode workflow built the dev artifact and
+passed the tarball smoke, then failed during local tap install because Homebrew
+refused to load `cip113-cli` from the third-party tap while evaluating the dev
+formula's conflict metadata. Amaru's current Darwin workflow already repinned
+the same `paolino/dev-assets/darwin-homebrew-release` action to
+`9ac7c6280196ca7cea154ec78f091e2b6481abec`, whose relevant diff adds
+`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` plus guarded `brew trust "$INPUT_TAP_NAME"`
+to both local tap and tap install scripts. Repin this repo to that same action
+revision.
+
 ## Slice Breakdown
 
 - Slice 1: The Nix call site, release checker, and Darwin workflow hook form one
   release-mode contract and must land together.
 - Slice 2: Relax the ordinary CI version check so it reports Cabal and
   release-please versions without enforcing equality.
+- Slice 3: Repin the Darwin release composite action to the Amaru-proven
+  tap-trust revision.

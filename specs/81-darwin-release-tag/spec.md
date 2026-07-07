@@ -37,6 +37,9 @@ tag, but the release-check-command pattern does fit.
   `dev-homebrew` and may continue to rewrite formula URLs for local-tap tests.
 - **FR-006**: CI must not enforce equality between the Cabal artifact version
   and the release-please public release tag.
+- **FR-007**: Darwin PR-mode verification must continue to install and test the
+  generated dev formula through the local tap under current Homebrew tap-trust
+  rules.
 
 ## Success Criteria
 
@@ -50,6 +53,8 @@ tag, but the release-check-command pattern does fit.
 - `./gate.sh` passes after the issue-specific proof is added.
 - The ordinary PR `CI / build` workflow does not fail solely because Cabal and
   release-please versions differ.
+- The Darwin PR-mode workflow uses the same tap-trust-capable dev-assets action
+  revision as Amaru's current Darwin release workflow.
 
 ## Non-Goals
 

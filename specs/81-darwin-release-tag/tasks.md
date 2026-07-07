@@ -21,3 +21,11 @@
       release-please tag.
 - [X] T8107 Prove the old CI shell condition fails on current versions, the new
       workflow step succeeds, and `./gate.sh` still passes.
+
+## Slice 3 - Darwin tap trust action pin
+
+- [ ] T8108 Repin `.github/workflows/darwin-release.yml` from
+      `paolino/dev-assets/darwin-homebrew-release@6864b20...` to the
+      Amaru-proven tap-trust revision `9ac7c6280196ca7cea154ec78f091e2b6481abec`.
+- [ ] T8109 Prove the old action revision lacks the tap-trust fix, the new
+      revision includes it, and local workflow lint plus `./gate.sh` pass.
