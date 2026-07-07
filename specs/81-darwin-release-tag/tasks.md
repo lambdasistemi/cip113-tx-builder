@@ -16,8 +16,8 @@
 
 ## Slice 2 - CI version invariant correction
 
-- [ ] T8106 Replace the `CI / build` Cabal-vs-manifest equality check with a
+- [X] T8106 Replace the `CI / build` Cabal-vs-manifest equality check with a
       non-failing report of the separate Cabal artifact version and
       release-please tag.
-- [ ] T8107 Prove the old CI shell condition fails on current versions, the new
+- [X] T8107 Prove the old CI shell condition fails on current versions, the new
       workflow step succeeds, and `./gate.sh` still passes.

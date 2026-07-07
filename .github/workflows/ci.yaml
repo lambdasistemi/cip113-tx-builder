@@ -27,16 +27,21 @@ jobs:
             hlint src/ e2e-test/
           "
 
-      - name: Cabal version matches manifest
+      - name: Report Cabal and release-please versions
         run: |
           manifest=$(sed -n 's/.*"\."[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .release-please-manifest.json)
-          pvp="${manifest}.0"
           read -r _ cabal <<< "$(grep '^version:' cip113-tx-builder.cabal)"
-          if [ "$cabal" != "$pvp" ]; then
-            echo "Version drift: cabal=$cabal manifest-derived=$pvp"
+          if [ -z "$manifest" ]; then
+            echo "missing release-please manifest version" >&2
             exit 1
           fi
-          echo "Version OK: $cabal"
+          if [ -z "$cabal" ]; then
+            echo "missing Cabal version" >&2
+            exit 1
+          fi
+          echo "Release-please tag version: v${manifest}"
+          echo "Cabal artifact version: ${cabal}"
+          echo "Versions are intentionally separate for release tags vs artifact names."
 
       - name: E2E integration tests
         run: |
