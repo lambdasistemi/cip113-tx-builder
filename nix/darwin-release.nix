@@ -3,7 +3,7 @@
 , packageVersion
 , artifactVersion ? packageVersion
 , package
-, releaseTag ? "v${packageVersion}"
+, releaseTag
 , formulaName ? "cip113-cli"
 , formulaClass ? "Cip113Cli"
 , formulaVersion ? artifactVersion

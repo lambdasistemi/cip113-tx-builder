@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: scripts/release/check-darwin-release-tag [TAG] [--resolve-url]
+
+Verifies that the Darwin release package metadata uses the release-please tag.
+TAG may also be supplied through the TAG environment variable.
+USAGE
+}
+
+resolve_url=no
+tag_arg=
+
+for arg in "$@"; do
+  case "$arg" in
+    --resolve-url)
+      resolve_url=yes
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "unknown option: $arg" >&2
+      usage
+      exit 2
+      ;;
+    *)
+      if [ -n "$tag_arg" ]; then
+        echo "unexpected extra argument: $arg" >&2
+        usage
+        exit 2
+      fi
+      tag_arg=$arg
+      ;;
+  esac
+done
+
+release_tag=${tag_arg:-${TAG:-}}
+if [ -z "$release_tag" ]; then
+  echo "missing release tag argument or TAG environment variable" >&2
+  usage
+  exit 2
+fi
+
+manifest_version=$(
+  nix eval --quiet --impure --raw --expr \
+    '(builtins.fromJSON (builtins.readFile ./.release-please-manifest.json))."."'
+)
+manifest_tag="v${manifest_version}"
+
+if [ "$release_tag" != "$manifest_tag" ]; then
+  echo "release tag mismatch: supplied $release_tag but release-please manifest is $manifest_tag" >&2
+  exit 1
+fi
+
+eval_attr() {
+  nix eval --quiet ".#packages.aarch64-darwin.darwin-release-artifacts.$1" --raw
+}
+
+package_release_tag=$(eval_attr releaseTag)
+package_release_url=$(eval_attr releaseUrl)
+package_artifact_name=$(eval_attr artifactName)
+
+fail=0
+
+if [ "$package_release_tag" != "$release_tag" ]; then
+  echo "releaseTag mismatch: expected $release_tag, got $package_release_tag" >&2
+  fail=1
+fi
+
+case "$package_release_url" in
+  *"/releases/download/${release_tag}/"*) ;;
+  *)
+    echo "releaseUrl mismatch: expected URL containing /releases/download/${release_tag}/, got $package_release_url" >&2
+    fail=1
+    ;;
+esac
+
+case "$package_artifact_name" in
+  *aarch64-darwin.tar.gz) ;;
+  *)
+    echo "artifactName mismatch: expected Darwin tarball name, got $package_artifact_name" >&2
+    fail=1
+    ;;
+esac
+
+if [ "$fail" -ne 0 ]; then
+  exit 1
+fi
+
+if [ "$resolve_url" = yes ]; then
+  curl --fail --location --head --silent --show-error "$package_release_url" >/dev/null
+fi
+
+printf 'Darwin release metadata uses %s (%s)\n' "$release_tag" "$package_artifact_name"
