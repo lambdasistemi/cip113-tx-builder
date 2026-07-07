@@ -70,6 +70,9 @@
             builtins.head versionMatch;
           sourceRevision = self.shortRev or (self.dirtyShortRev or "dirty");
           devArtifactVersion = "${packageVersion}-${sourceRevision}";
+          releasePleaseVersion =
+            (builtins.fromJSON (builtins.readFile ./.release-please-manifest.json)).".";
+          releasePleaseTag = "v${releasePleaseVersion}";
           lintPkgs = pkgs;
           indexState = "2026-02-17T10:15:41Z";
           indexTool = { index-state = indexState; };
@@ -158,6 +161,7 @@
               import ./nix/darwin-release.nix {
                 inherit inputs pkgs packageVersion;
                 package = cip113CliForBundlers;
+                releaseTag = releasePleaseTag;
               };
             darwin-dev-homebrew-artifacts =
               import ./nix/darwin-release.nix {

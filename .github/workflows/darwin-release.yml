@@ -93,6 +93,7 @@ jobs:
           dev-tag: dev-homebrew
           release-package: darwin-release-artifacts
           dev-package: darwin-dev-homebrew-artifacts
+          release-check-command: 'scripts/release/check-darwin-release-tag "$TAG"'
           release-formula: cip113-cli.rb
           dev-formula: cip113-cli-dev.rb
           release-artifact-name: darwin-release-bundle
