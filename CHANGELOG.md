@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/lambdasistemi/cip113-tx-builder/compare/v0.1.2...v0.1.3) (2026-07-07)
+
+
+### Bug Fixes
+
+* use release-please tag for Darwin formula URL ([69d58be](https://github.com/lambdasistemi/cip113-tx-builder/commit/69d58be3d91e2c9c2fc99931b96d9f2416a23fd1))
+* use release-please tag for Darwin formula URL ([0534d17](https://github.com/lambdasistemi/cip113-tx-builder/commit/0534d173e3e6f0dce7009c48e114e194ed2f51fb))
+
 ## [0.1.2](https://github.com/lambdasistemi/cip113-tx-builder/compare/v0.1.1...v0.1.2) (2026-07-07)
 
 
