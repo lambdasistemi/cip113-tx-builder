@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.2](https://github.com/lambdasistemi/cip113-tx-builder/compare/v0.1.1...v0.1.2) (2026-07-07)
+
+
+### Features
+
+* add CIP-113 registry resolver ([52f6ccd](https://github.com/lambdasistemi/cip113-tx-builder/commit/52f6ccde73e1ebedc5ff732bcfc14cd1f2777852))
+* add shared deployment descriptor flag ([17748e7](https://github.com/lambdasistemi/cip113-tx-builder/commit/17748e7e7e1e54490aff423e46a68373fdd28fdd))
+* add vault seal and sign commands ([d52118a](https://github.com/lambdasistemi/cip113-tx-builder/commit/d52118af7a4a1cb49186b301ffc57692bbddbed9))
+* **cli:** convert freeze and seize to shared settings ([5b57dd7](https://github.com/lambdasistemi/cip113-tx-builder/commit/5b57dd7c8ce9fa6ec6b6c79c39a06c0cfd2522bc))
+* migrate CLI parser foundation to opt-env-conf ([b228246](https://github.com/lambdasistemi/cip113-tx-builder/commit/b228246ffff4d96ca9e2429de92ae152549b6d12))
+* move register parser to shared settings ([19493bb](https://github.com/lambdasistemi/cip113-tx-builder/commit/19493bb5774b8c38f75c3bd24cbffa64eb5e2b30))
+* move transfer parser to shared settings ([ff06fea](https://github.com/lambdasistemi/cip113-tx-builder/commit/ff06fea95027094b414585f7713af8fb67017a51))
+* **nix:** expose release artifact outputs ([91e0902](https://github.com/lambdasistemi/cip113-tx-builder/commit/91e090287e032be80743d4ca6bb18243f58fa291))
+* **register:** build real register tx ([bae3160](https://github.com/lambdasistemi/cip113-tx-builder/commit/bae316015a960fde2135855a292c0c0af2405ffe))
+* **register:** require node deployment plumbing ([6f87a05](https://github.com/lambdasistemi/cip113-tx-builder/commit/6f87a0598e3ee73db43032699a3d808f46b08775))
+* **transfer:** build real transfer tx ([8ad49eb](https://github.com/lambdasistemi/cip113-tx-builder/commit/8ad49eb18838e66aa7a2e41602154067d25556d9))
+* wire freeze seize to real thirdPartyTx ([5f320e8](https://github.com/lambdasistemi/cip113-tx-builder/commit/5f320e8583e6f2b5e96315660c1ebfbfdd815e24))
+
+
+### Bug Fixes
+
+* **register:** submit CLI-built registry insertion ([83b4b89](https://github.com/lambdasistemi/cip113-tx-builder/commit/83b4b8985d5756bb443e9c7c0c5e6539353baff1))
+
 ## [0.1.1](https://github.com/lambdasistemi/cip113-tx-builder/compare/v0.1.0...v0.1.1) (2026-06-30)
 
 
